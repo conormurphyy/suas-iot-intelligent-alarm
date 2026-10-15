@@ -23,7 +23,7 @@ Normally Open(NO) Pressure Mat Switch
 
 Touchscreen
 
-Buzzer
+Buzzer or Speaker for Custom Alarm Sounds
 
 ## Potential Addon Features
 
