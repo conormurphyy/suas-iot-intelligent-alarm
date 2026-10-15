@@ -8,15 +8,21 @@ Users can set their alarm schedule in a web application & PWA. The system will a
 ## Tech Stack
 
 Frontend: React
+
 Backend: FastAPI
+
 Database: MySQL
+
 Cloud: AWS
 
 ## Hardware
 
 Raspberry Pi
+
 Normally Open(NO) Pressure Mat Switch
+
 Touchscreen
+
 Buzzer
 
 ## Potential Addon Features
