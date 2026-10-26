@@ -7,7 +7,7 @@ A full-stack IoT Alarm that uses a monitoring system to enforce users waking up 
 Users can set their alarm schedule in a web application & PWA. The system will also track time in bed and time out of bed across mutiple days/weeks creating data that the user can access. This could also be used as a tool to improve sleep habits. When the alarm goes off and the user gets out of bed they may want to get back into bed if the alarm stops, if this occurs and the pressure mat senses pressure after the alarm goes off after a certain time window the alarm will go off again.
 ## Tech Stack
 
-Frontend: React
+Frontend: FastAPI template
 
 Backend: FastAPI
 
