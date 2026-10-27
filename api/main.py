@@ -15,6 +15,7 @@ app.mount("/media", StaticFiles(directory="media"), name="media")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# Get reqs for pages
 @app.get("/", include_in_schema=False, name="home")
 @app.get("/overview", include_in_schema=False, name="overview")
 async def overview(request: Request):
@@ -23,3 +24,28 @@ async def overview(request: Request):
         name="pages/index.html",
         context={"request": request}
     )
+
+@app.get("/analytics", include_in_schema=False, name="analytics")
+async def analytics(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/analytics.html",
+        context={"request": request}
+    )
+
+@app.get("/schedule", include_in_schema=False, name="schedule")
+async def schedule(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/schedule.html",
+        context={"request": request}
+    )
+
+@app.get("/profile", include_in_schema=False, name="profile")
+async def profile(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/profile.html",
+        context={"request": request}
+    )
+
