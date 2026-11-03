@@ -10,10 +10,10 @@ import models
 
 app = FastAPI()
 
-app.mount("/media", StaticFiles(directory="media"), name="media")
+app.mount("/media", StaticFiles(directory="../frontend/media"), name="media")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
+templates = Jinja2Templates(directory="../frontend/templates")
 
 # Get reqs for pages
 @app.get("/", include_in_schema=False, name="home")
