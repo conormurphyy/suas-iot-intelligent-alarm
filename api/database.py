@@ -1,16 +1,22 @@
-from __future__ import annotations
-from datatime import UTC, datetime
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, Float
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from .database import Base
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
-class User(Base):
-    __tablename__ = "user"
+SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./alarm.db"
 
-    user_id = Mapped[int] = mapped_column(primary_key=True, index = True)
-    username = Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    email = Mapped[str] = mapped_column(String(300), unique=True, nullable=False)
-    image_file = Mapped[str | None] = mapped_column(String(200), nullable=True, default="default.jpg")
+engine = create_async_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread":False}
+)
 
-    readings = Mapped[list[Reading]] = relationship(back_populates="author", cascade="all, delete-orphan")
-    
+AsyncSessionLocal = async_sessionmaker(
+    engine,
+    class_ = AsyncSession,
+    expire_on_commit=False
+)
+
+class Base(DeclarativeBase):
+    pass
+
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
