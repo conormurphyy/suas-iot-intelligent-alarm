@@ -31,12 +31,12 @@ class Alarm(Base):
                                                      default=lambda: datetime.now(UTC))
     author: Mapped[User] = relationship(back_populates="alarm")
     
-class Reading(Base):
-    __tablename__ = "reading"
+class PressureMatReading(Base):
+    __tablename__ = "pressure_mat_reading"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
     pressure_detected: Mapped[bool] = mapped_column(nullable=False, default=False)
     date_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True),
                                                      default=lambda: datetime.now(UTC))
     event_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    author: Mapped[User] = relationship(back_populates="reading")
+    author: Mapped[User] = relationship(back_populates="pressure_mat_reading")

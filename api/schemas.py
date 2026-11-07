@@ -1,3 +1,5 @@
+import datetime
+
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
 
 # User schema
@@ -18,3 +20,17 @@ class UserUpdate(UserBase):
     username: str | None = Field(min_length=3, max_length=20)
     email: EmailStr | None = Field(default = None,  max_length=300)
     image_file: str | None
+
+class PressureMatReadingBase(BaseModel):
+    pressure_detected: bool
+    event_type: str = Field(max_length=50)
+
+class PressureMatReadingCreate(PressureMatReadingBase):
+    user_id: int #Temporary
+
+class PressureMatReadingResponse(PressureMatReadingBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    date_timestamp: datetime
+    author: UserResponse
