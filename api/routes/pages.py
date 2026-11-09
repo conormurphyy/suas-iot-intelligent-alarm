@@ -16,14 +16,6 @@ async def overview(request: Request):
         context={"request": request}
     )
 
-@router.get("/analytics", include_in_schema=False, name="analytics")
-async def analytics(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="pages/analytics.html",
-        context={"request": request}
-    )
-
 @router.get("/schedule", include_in_schema=False, name="schedule")
 async def schedule(request: Request):
     return templates.TemplateResponse(
@@ -37,5 +29,13 @@ async def profile(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="pages/profile.html",
+        context={"request": request}
+    )
+
+@router.get("/time", include_in_schema=False, name="time")
+async def time(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/time.html",
         context={"request": request}
     )
