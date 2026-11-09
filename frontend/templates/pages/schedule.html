@@ -1,0 +1,130 @@
+{% extends "main.html" %}
+
+{% block title %}Schedule · Suas{% endblock %}
+{% block page_id %}schedule{% endblock %}
+{% block breadcrumb_data %}Home > Schedule{% endblock %}
+{% block nav_schedule %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('overview') }}">Home</a><span class="sep" aria-hidden="true">›</span><span class="current" aria-current="page">Schedule</span></nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <div class="page-pretitle">Alarms</div>
+            <h1 class="page-title">Schedule</h1>
+        </div>
+        <div class="page-actions">
+            <a class="btn btn-primary" href="#create-alarm">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+                New alarm
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% set alarm_list = alarms | default([]) %}
+
+<!-- Create / edit alarm -->
+<div class="card" id="create-alarm">
+    <div class="card-header">
+        <div>
+            <div class="card-title" data-form-title>Create alarm</div>
+            <div class="card-subtitle">Set a time, pick a sound and choose whether it is enabled.</div>
+        </div>
+    </div>
+    <div class="card-body">
+        <form id="alarm-form" action="{{ url_for('schedule') }}" method="post" data-async-form data-action-create="{{ url_for('schedule') }}">
+            <input type="hidden" name="id" value="">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="alarm_time">Alarm time <span class="required">*</span></label>
+                    <input type="time" id="alarm_time" name="alarm_time" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="sound_file">Sound</label>
+                    <select id="sound_file" name="sound_file" class="form-control">
+                        <option value="default_alarm.mp3">Default alarm</option>
+                        {# Add more options here for each sound file in frontend/media/sounds/ #}
+                    </select>
+                    <div class="form-help">Sound files are stored in <code>frontend/media/sounds/</code>.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;font-size:.875rem;color:var(--text)">
+                    <input type="checkbox" name="enabled" value="true" checked style="margin:0">
+                    Enabled — sound at the scheduled time
+                </label>
+            </div>
+            <div class="form-actions right">
+                <button type="reset" class="btn btn-outline">Reset</button>
+                <button type="submit" class="btn btn-primary">Create alarm</button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Existing alarms -->
+<div class="card">
+    <div class="card-header">
+        <div>
+            <div class="card-title">Your alarms</div>
+            <div class="card-subtitle">Manage your scheduled alarms.</div>
+        </div>
+    </div>
+    {% if alarm_list %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Sound</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th style="width:140px;text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alarm in alarm_list %}
+                <tr data-alarm-row>
+                    <td class="cell-strong">{{ alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else alarm.alarm_time }}</td>
+                    <td>{{ alarm.sound_file | default('default_alarm.mp3') }}</td>
+                    <td>
+                        {% if alarm.enabled %}
+                            <span class="status status-green">Enabled</span>
+                        {% else %}
+                            <span class="status status-red">Disabled</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ alarm.date_timestamp.strftime('%d %b %Y') if alarm.date_timestamp and alarm.date_timestamp.strftime is defined else alarm.date_timestamp }}</td>
+                    <td style="text-align:right">
+                        <button type="button" class="btn btn-outline btn-sm" data-edit-alarm
+                            data-id="{{ alarm.id }}"
+                            data-time="{{ alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else '' }}"
+                            data-sound="{{ alarm.sound_file | default('default_alarm.mp3') }}"
+                            data-enabled="{{ 'true' if alarm.enabled else 'false' }}">Edit</button>
+                        <button type="button" class="btn btn-danger btn-sm" data-delete-alarm
+                            data-id="{{ alarm.id }}"
+                            data-url="{{ url_for('schedule') }}/{{ alarm.id }}/delete"
+                            data-label="alarm #{{ alarm.id }}">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:40px 16px">
+        <div class="empty-state-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="empty-state-title">No alarms yet</div>
+        <div class="empty-state-desc">Create your first alarm above to start waking up on time.</div>
+        <div class="empty-state-actions"><a class="btn btn-primary" href="#create-alarm">Create an alarm</a></div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
