@@ -17,3 +17,4 @@ app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
 
 app.include_router(pages_router)
 app.include_router(users_router)
+app.include_router(readings_router)
