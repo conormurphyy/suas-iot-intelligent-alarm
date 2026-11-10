@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from database import Base
 import models
 from routes.pages import router as pages_router
+from routes.users import router as users_router
+from routes.readings import router as readings_router
 
 Base.metadata.create_all(bind=models.engine)
 
