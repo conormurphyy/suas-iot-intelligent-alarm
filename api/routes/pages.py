@@ -39,3 +39,19 @@ async def time(request: Request):
         name="pages/time.html",
         context={"request": request}
     )
+
+@router.get("/login", include_in_schema=False, name="login")
+async def login(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/login.html",
+        context={"request": request}
+    )
+
+@router.get("/register", include_in_schema=False, name="register")
+async def register(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/register.html",
+        context={"request": request}
+    )
