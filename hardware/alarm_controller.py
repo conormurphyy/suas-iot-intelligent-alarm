@@ -10,7 +10,7 @@ def run_alarm():
     print("Alarm activated!")
 
     try:
-        start_alarm()
+        play_alarm()
 
         while not button.is_pressed:
             time.sleep(0.1)
