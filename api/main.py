@@ -63,7 +63,7 @@ def validation_exception_handler(request:Request, exception: RequestValidationEr
             )
     return templates.TemplateResponse(
         request,
-        "error.html",
+        "pages/error.html",
         {
         "status_code": status.HTTP_422_UNPROCESSABLE_CONTENT,
             "title": status.HTTP_422_UNPROCESSABLE_CONTENT,
