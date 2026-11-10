@@ -26,6 +26,26 @@ class UserUpdate(UserBase):
     image_file: str | None = None
 
 # Alarm Schema
+class AlarmBase(BaseModel):
+    alarm_time: datetime.datetime
+    enabled: bool = True
+    sound_file: str = Field(default="default_sound.mp3", max_length=200)
+
+class AlarmCreate(AlarmBase):
+    pass
+
+class AlarmUpdate(AlarmBase):
+    alarm_time: datetime.datetime | None = None
+    enabled: bool | None = None
+    sound_file: str | None = Field(default=None, max_length=200)
+
+class AlarmResponse(AlarmBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    user_id: int
+    date_timestamp: datetime.datetime
+    author: UserResponse
 
 # Pressure Mat Reading schema
 class PressureMatReadingBase(BaseModel):
@@ -41,7 +61,7 @@ class PressureMatReadingUpdate(PressureMatReadingBase):
 
 class PressureMatReadingResponse(PressureMatReadingBase):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     user_id: int
     date_timestamp: datetime.datetime
