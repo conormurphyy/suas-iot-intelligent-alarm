@@ -12,7 +12,7 @@ def stop_alarm():
     buzzer.value = 0
     print("Alarm is stopped...")
 
-def close_buzzer():
+def close_alarm():
     buzzer.close()
     print("Buzzer closed.")
 
@@ -26,7 +26,7 @@ def main():
     except KeyboardInterrupt:
         print("Exiting...")
     finally:
-        close_buzzer()
+        close_alarm()
 
 if __name__ == "__main__":
     main()
