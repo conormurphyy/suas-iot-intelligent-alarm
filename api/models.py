@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from database import Base
+from api.database import Base
 
 class User(Base):
     __tablename__ = "user"
