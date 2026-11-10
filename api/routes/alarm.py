@@ -18,7 +18,7 @@ templates = Jinja2Templates(directory="../frontend/templates")
 
 #Create Alarm
 @router.post("/", response_model=AlarmResponse, status_code=status.HTTP_201_CREATED)
-async def create_alarm(alarm: AlarmResponse, db: Annotated[Session, Depends(get_db)]):
+def create_alarm(alarm: AlarmResponse, db: Annotated[Session, Depends(get_db)]):
     new_alarm = models.Alarm(
         user_id=alarm.user_id,
         alarm_time=alarm.alarm_time,
@@ -27,22 +27,22 @@ async def create_alarm(alarm: AlarmResponse, db: Annotated[Session, Depends(get_
         sound_path=alarm.sound_path
     )
     db.add(new_alarm)
-    await db.commit()
-    await db.refresh(new_alarm)
+    db.commit()
+    db.refresh(new_alarm)
     return new_alarm
 
 #Get All Alarms
 @router.get("/", response_model=list[AlarmResponse])
-async def get_all_alarms(db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Alarm))
+def get_all_alarms(db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.Alarm))
     alarms = result.scalars().all()
     
     return alarms
 
 #Get Alarm by ID
 @router.get("/{alarm_id}", response_model=AlarmResponse)
-async def get_alarm(alarm_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
+def get_alarm(alarm_id: int, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     alarm = result.scalars().first()
     if alarm:
         return alarm
@@ -50,8 +50,8 @@ async def get_alarm(alarm_id: int, db: Annotated[AsyncSession, Depends(get_db)])
 
 #Get Alarm by User ID
 @router.get("/{user_id}/alarms", response_model=list[AlarmResponse])
-async def get_user_alarms(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Alarm).where(models.Alarm.user_id == user_id))
+def get_user_alarms(user_id: int, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.Alarm).where(models.Alarm.user_id == user_id))
     alarms = result.scalars().all()
     if not alarms:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No alarms found for user with id {user_id}")
@@ -59,22 +59,22 @@ async def get_user_alarms(user_id: int, db: Annotated[AsyncSession, Depends(get_
 
 #Update Alarm Full
 @router.put("/{alarm_id}", response_model=AlarmResponse)
-async def update_alarm(alarm_id: int, alarm: AlarmUpdate, db: Annotated
-[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
+def update_alarm(alarm_id: int, alarm: AlarmUpdate, db: Annotated
+[Session, Depends(get_db)]):
+    result = db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     existing_alarm = result.scalars().first()
     if existing_alarm:
         existing_alarm.user_id = alarm.user_id
         existing_alarm.status = alarm.status
         existing_alarm.timestamp = alarm.timestamp
-        await db.commit()
+        db.commit()
         return existing_alarm
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
 #Update Alarm Partial
 @router.patch("/{alarm_id}", response_model=AlarmResponse)
-async def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
+def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     existing_alarm = result.scalars().first()
     if existing_alarm:
         if alarm.user_id is not None:
@@ -83,17 +83,17 @@ async def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[
             existing_alarm.status = alarm.status
         if alarm.timestamp is not None:
             existing_alarm.timestamp = alarm.timestamp
-        await db.commit()
+        db.commit()
         return existing_alarm
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
 #Delete Alarm
 @router.delete("/{alarm_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_alarm(alarm_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
-    result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
+def delete_alarm(alarm_id: int, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     existing_alarm = result.scalars().first()
     if existing_alarm:
-        await db.delete(existing_alarm)
-        await db.commit()
+        db.delete(existing_alarm)
+        db.commit()
         return
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
