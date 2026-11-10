@@ -2,8 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -12,9 +11,9 @@ from database import get_db
 from schemas import UserCreate, UserResponse, UserUpdate
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
-templates = Jinja2Templates(directory="../frontend/templates")
 
-#User Create
+
+# Create User
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
     new_user = models.User(
@@ -28,7 +27,8 @@ def create_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
     db.refresh(new_user)
     return new_user
 
-#Get User by ID
+
+# Get User by ID
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.User).where(models.User.id == user_id))
@@ -37,7 +37,8 @@ def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
         return user
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {user_id} not found")
 
-#Get All Users
+
+# Get All Users
 @router.get("/", response_model=list[UserResponse])
 def get_all_users(db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.User))
@@ -46,7 +47,8 @@ def get_all_users(db: Annotated[Session, Depends(get_db)]):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No users found")
     return users
 
-#Update User Full
+
+# Update User Full
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(user_id: int, user: UserCreate, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.User).where(models.User.id == user_id))
@@ -61,7 +63,8 @@ def update_user(user_id: int, user: UserCreate, db: Annotated[Session, Depends(g
         return existing_user
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {user_id} not found")
 
-#Update User Partial
+
+# Update User Partial
 @router.patch("/{user_id}", response_model=UserResponse)
 def update_user_partial(user_id: int, user: UserUpdate, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.User).where(models.User.id == user_id))
@@ -80,7 +83,8 @@ def update_user_partial(user_id: int, user: UserUpdate, db: Annotated[Session, D
         return existing_user
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {user_id} not found")
 
-#Delete User
+
+# Delete User
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.User).where(models.User.id == user_id))
