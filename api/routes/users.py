@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/users", tags=["Users"])
 templates = Jinja2Templates(directory="../frontend/templates")
 
 #User Create
-@router.post("/api/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserResponse, db: Annotated[AsyncSession, Depends(get_db)]):
     new_user = models.User(
         username=user.username,
@@ -31,7 +31,7 @@ async def create_user(user: UserResponse, db: Annotated[AsyncSession, Depends(ge
     return new_user
 
 #Get User by ID
-@router.get("/api/user/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.User).where(models.User.id == user_id))
     user = result.scalars().first()
@@ -40,7 +40,7 @@ async def get_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {user_id} not found")
 
 #Get All Users
-@router.get("/api/users", response_model=list[UserResponse])
+@router.get("/", response_model=list[UserResponse])
 async def get_all_users(db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.User))
     users = result.scalars().all()
@@ -49,7 +49,7 @@ async def get_all_users(db: Annotated[AsyncSession, Depends(get_db)]):
     return users
 
 #Update User Full
-@router.put("/api/user/{user_id}", response_model=UserResponse)
+@router.put("/{user_id}", response_model=UserResponse)
 async def update_user(user_id: int, user: UserResponse, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.User).where(models.User.id == user_id))
     existing_user = result.scalars().first()
@@ -64,7 +64,7 @@ async def update_user(user_id: int, user: UserResponse, db: Annotated[AsyncSessi
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {user_id} not found")
 
 #Update User Partial
-@router.patch("/api/user/{user_id}", response_model=UserResponse)
+@router.patch("/{user_id}", response_model=UserResponse)
 async def update_user_partial(user_id: int, user: UserResponse, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.User).where(models.User.id == user_id))
     existing_user = result.scalars().first()
@@ -83,7 +83,7 @@ async def update_user_partial(user_id: int, user: UserResponse, db: Annotated[As
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {user_id} not found")
 
 #Delete User
-@router.delete("/api/user/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.User).where(models.User.id == user_id))
     existing_user = result.scalars().first()

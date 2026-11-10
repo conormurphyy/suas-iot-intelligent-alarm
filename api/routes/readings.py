@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/readings", tags=["Readings"])
 templates = Jinja2Templates(directory="../frontend/templates")
  
 #Get All Readings
-@router.get("/api/readings", response_model=list[PressureMatReadingResponse])
+@router.get("/", response_model=list[PressureMatReadingResponse])
 async def get_all_readings(db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Reading))
     readings = result.scalars().all()
@@ -26,7 +26,7 @@ async def get_all_readings(db: Annotated[AsyncSession, Depends(get_db)]):
     return readings
 
 #Get Reading by ID
-@router.get("/api/reading/{reading_id}", response_model=PressureMatReadingResponse)
+@router.get("/{reading_id}", response_model=PressureMatReadingResponse)
 async def get_reading(reading_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Reading).where(models.Reading.id == reading_id))
     reading = result.scalars().first()
@@ -35,7 +35,7 @@ async def get_reading(reading_id: int, db: Annotated[AsyncSession, Depends(get_d
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Reading with id {reading_id} not found")
 
 #Get Readings by User ID
-@router.get("/api/user/{user_id}/readings", response_model = list[PressureMatReadingResponse])
+@router.get("/{user_id}/readings", response_model = list[PressureMatReadingResponse])
 async def get_user_readings(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Reading).where(models.Reading.user_id == user_id))
     readings = result.scalars().all()

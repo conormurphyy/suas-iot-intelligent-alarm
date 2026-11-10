@@ -40,7 +40,7 @@ async def get_all_alarms(db: Annotated[AsyncSession, Depends(get_db)]):
     return alarms
 
 #Get Alarm by ID
-@router.get("/api/alarm/{alarm_id}", response_model=AlarmResponse)
+@router.get("/{alarm_id}", response_model=AlarmResponse)
 async def get_alarm(alarm_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     alarm = result.scalars().first()
@@ -49,7 +49,7 @@ async def get_alarm(alarm_id: int, db: Annotated[AsyncSession, Depends(get_db)])
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
 #Get Alarm by User ID
-@router.get("/api/user/{user_id}/alarms", response_model=list[AlarmResponse])
+@router.get("/{user_id}/alarms", response_model=list[AlarmResponse])
 async def get_user_alarms(user_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Alarm).where(models.Alarm.user_id == user_id))
     alarms = result.scalars().all()
@@ -58,7 +58,7 @@ async def get_user_alarms(user_id: int, db: Annotated[AsyncSession, Depends(get_
     return alarms
 
 #Update Alarm Full
-@router.put("/api/alarm/{alarm_id}", response_model=AlarmResponse)
+@router.put("/{alarm_id}", response_model=AlarmResponse)
 async def update_alarm(alarm_id: int, alarm: AlarmUpdate, db: Annotated
 [AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
@@ -72,7 +72,7 @@ async def update_alarm(alarm_id: int, alarm: AlarmUpdate, db: Annotated
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
 #Update Alarm Partial
-@router.patch("/api/alarm/{alarm_id}", response_model=AlarmResponse)
+@router.patch("/{alarm_id}", response_model=AlarmResponse)
 async def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     existing_alarm = result.scalars().first()
@@ -88,7 +88,7 @@ async def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
 #Delete Alarm
-@router.delete("/api/alarm/{alarm_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{alarm_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_alarm(alarm_id: int, db: Annotated[AsyncSession, Depends(get_db)]):
     result = await db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     existing_alarm = result.scalars().first()
