@@ -32,7 +32,7 @@ class AlarmBase(BaseModel):
     sound_file: str = Field(default="default_sound.mp3", max_length=200)
 
 class AlarmCreate(AlarmBase):
-    pass
+    user_id: int
 
 class AlarmUpdate(BaseModel):
     alarm_time: datetime.datetime | None = None
