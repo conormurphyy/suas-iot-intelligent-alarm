@@ -1,17 +1,15 @@
 # Users Routes
 
-from sqlalchemy import select
-from unittest import result
-from unittest import result
-from typing_extensions import Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.templating import Jinja2Templates
-from requests import Session
-from sqlalchemy.ext.asyncio import AsyncSession
-from api import models
-from api.database import get_db
-from api.schemas import UserCreate, UserResponse, UserUpdate
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+import models
+from database import get_db
+from schemas import UserCreate, UserResponse, UserUpdate
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 templates = Jinja2Templates(directory="../frontend/templates")

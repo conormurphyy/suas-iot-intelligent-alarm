@@ -1,18 +1,18 @@
 # Exception Routes
 
-from select import select
-from unittest import result
-from unittest import result
+from typing import Annotated
+
 from fastapi.exceptions import RequestValidationError
-from typing_extensions import Annotated
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.templating import Jinja2Templates
-from requests import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from api import models
-from api.database import get_db
-from api.schemas import PressureMatReadingResponse, UserResponse
+
+import models
+from database import get_db
+from schemas import PressureMatReadingResponse, UserResponse
 
 router = APIRouter(prefix="/api/exceptions", tags=["Exceptions"])
 templates = Jinja2Templates(directory="../frontend/templates")

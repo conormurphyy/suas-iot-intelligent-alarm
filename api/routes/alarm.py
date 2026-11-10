@@ -1,17 +1,15 @@
 # Alarm Routes
 
-from select import select
-from unittest import result
-from unittest import result
-from typing_extensions import Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.templating import Jinja2Templates
-from requests import Session
-from sqlalchemy.ext.asyncio import AsyncSession
-from api import models
-from api.database import get_db
-from api.schemas import AlarmResponse, AlarmCreate, AlarmUpdate
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+import models
+from database import get_db
+from schemas import AlarmResponse, AlarmCreate, AlarmUpdate
 
 router = APIRouter(prefix="/api/alarms", tags=["Alarms"])
 templates = Jinja2Templates(directory="../frontend/templates")

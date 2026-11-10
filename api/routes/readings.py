@@ -1,17 +1,15 @@
 # Reading Routes
 
-from sqlalchemy import select
-from unittest import result
-from unittest import result
-from typing_extensions import Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.ext.asyncio import AsyncSession
-from api import models
-from sqlalchemy.orm import Session, select
-from api.database import get_db
-from api.schemas import PressureMatReadingResponse, UserResponse
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+import models
+from database import get_db
+from schemas import PressureMatReadingResponse, UserResponse
 
 router = APIRouter(prefix="/api/readings", tags=["Readings"])
 templates = Jinja2Templates(directory="../frontend/templates")
