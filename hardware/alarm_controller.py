@@ -1,6 +1,6 @@
 
-from pressure_mat import button
-from alarm_buzzer import play_alarm, stop_alarm, close_alarm
+from hardware.pressure_mat import button
+from hardware.alarm_buzzer import play_alarm, stop_alarm, close_alarm
 
 import time
 
