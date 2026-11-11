@@ -5,6 +5,7 @@ from typing_extensions import Annotated
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 from select import select
+from sqlalchemy.orm import Session
 from api import models
 from api.database import get_db
 
