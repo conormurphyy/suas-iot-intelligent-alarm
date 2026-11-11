@@ -4,7 +4,7 @@ from typing_extensions import Annotated
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from select import select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from api import models
 from api.database import get_db
@@ -24,12 +24,32 @@ async def overview(request: Request):
 
 @router.get("/schedule", name="schedule")
 def schedule(request: Request, db: Annotated[Session, Depends(get_db)]):
+    user = _get_or_create_demo_user(db)
     alarms = db.execute(select(models.Alarm)).scalars().all()
     return templates.TemplateResponse(
         request=request,
         name="pages/schedule.html",
-        context={"alarms": alarms},
+        context={"alarms": alarms, "user": user},
     )
+
+
+def _get_or_create_demo_user(db: Session) -> models.User:
+    """Return the first user, creating a demo user if none exists yet.
+
+    There is no authentication yet, so the schedule page needs a concrete
+    user_id to attach newly created alarms to.
+    """
+    user = db.execute(select(models.User)).scalars().first()
+    if user is None:
+        user = models.User(
+            username="demo",
+            email="demo@suas.local",
+            password="demo1234",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    return user
 
 @router.get("/profile", include_in_schema=False, name="profile")
 async def profile(request: Request):

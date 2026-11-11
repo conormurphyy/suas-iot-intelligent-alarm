@@ -12,15 +12,13 @@ def run_alarm():
     try:
         play_alarm()
 
-        while not button.is_pressed:
-            time.sleep(0.1)
-
-        print("Pressure detected - alarm active")
-
+        # Sound the alarm continuously while the user is still in bed
+        # (pressure detected). Stop once they physically get out of bed
+        # (pressure released).
         while button.is_pressed:
             time.sleep(0.1)
 
-        print("Pressure removed - alarm off")
+        print("User out of bed - alarm off")
 
         stop_alarm()
 

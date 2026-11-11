@@ -40,6 +40,7 @@
     <div class="card-body">
         <form id="alarm-form" action="{{ url_for('create_alarm') }}" method="post" data-async-form data-action-create="{{ url_for('create_alarm') }}">
             <input type="hidden" name="id" value="">
+            <input type="hidden" name="user_id" value="{{ user.id if user is defined and user else '' }}">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="alarm_time">Alarm time <span class="required">*</span></label>
