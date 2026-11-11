@@ -108,8 +108,9 @@
                             data-enabled="{{ 'true' if alarm.enabled else 'false' }}">Edit</button>
                         <button type="button" class="btn btn-danger btn-sm" data-delete-alarm
                             data-id="{{ alarm.id }}"
-                            data-url="{{ url_for('schedule') }}/{{ alarm.id }}/delete"
-                            data-label="alarm #{{ alarm.id }}">Delete</button>
+                            data-url="/api/alarms/{{ alarm.id }}"
+                            data-label="alarm #{{ alarm.id }}">Delete
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
