@@ -17,7 +17,7 @@
             <h1 class="page-title">Schedule</h1>
         </div>
         <div class="page-actions">
-            <a class="btn btn-primary" href="#create-alarm">
+            <a class="btn btn-primary" href="#create-alarm" id="new-alarm-btn">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
                 New alarm
             </a>
@@ -38,9 +38,9 @@
         </div>
     </div>
     <div class="card-body">
-        <form id="alarm-form" action="{{ url_for('create_alarm') }}" method="post" data-async-form data-action-create="{{ url_for('create_alarm') }}">
-            <input type="hidden" name="id" value="">
-            <input type="hidden" name="user_id" value="{{ user.id if user is defined and user else '' }}">
+        <form id="alarm-form" action="{{ url_for('create_alarm') }}" method="post" data-action-create="{{ url_for('create_alarm') }}">
+            <input type="hidden" name="id" id="alarm_id" value="">
+            <input type="hidden" name="user_id" id="user_id" value="{{ user.id if user is defined and user else 1 }}">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="alarm_time">Alarm time <span class="required">*</span></label>
@@ -57,17 +57,18 @@
             </div>
             <div class="form-group">
                 <label style="display:flex;align-items:center;gap:8px;font-size:.875rem;color:var(--text)">
-                    <input type="checkbox" name="enabled" value="true" checked style="margin:0">
+                    <input type="checkbox" id="enabled" name="enabled" value="true" checked style="margin:0">
                     Enabled — sound at the scheduled time
                 </label>
             </div>
             <div class="form-actions right">
-                <button type="reset" class="btn btn-outline">Reset</button>
-                <button type="submit" class="btn btn-primary">Create alarm</button>
+                <button type="reset" class="btn btn-outline" id="reset-btn">Reset</button>
+                <button type="submit" class="btn btn-primary" id="submit-btn">Create alarm</button>
             </div>
         </form>
     </div>
 </div>
+
 <!-- Existing alarms -->
 <div class="card">
     <div class="card-header">
@@ -104,7 +105,7 @@
                     <td style="text-align:right">
                         <button type="button" class="btn btn-outline btn-sm" data-edit-alarm
                             data-id="{{ alarm.id }}"
-                            data-time="{{ alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else '' }}"
+                            data-time="{{ alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else alarm.alarm_time }}"
                             data-sound="{{ alarm.sound_file | default('default_alarm.mp3') }}"
                             data-enabled="{{ 'true' if alarm.enabled else 'false' }}">Edit</button>
                         <button type="button" class="btn btn-danger btn-sm" data-delete-alarm
@@ -129,4 +130,122 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("alarm-form");
+    const formTitle = document.querySelector("[data-form-title]");
+    const submitBtn = document.getElementById("submit-btn");
+    const alarmIdInput = document.getElementById("alarm_id");
+    const userIdInput = document.getElementById("user_id");
+    const alarmTimeInput = document.getElementById("alarm_time");
+    const soundFileInput = document.getElementById("sound_file");
+    const enabledInput = document.getElementById("enabled");
+
+    // 1. Handle Create & Update via JSON
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation(); // Prevents main.html scripts from also firing
+
+        const alarmId = alarmIdInput.value.trim();
+        const isEdit = Boolean(alarmId);
+
+        const [hours, minutes] = alarmTimeInput.value.split(":").map(Number);
+        const now = new Date();
+        const alarmDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            hours,
+            minutes,
+            0
+        );
+
+        if (alarmDate <= now) {
+            alarmDate.setDate(alarmDate.getDate() + 1);
+        }
+
+        const pad = (n) => String(n).padStart(2, "0");
+        const isoDateTime = `${alarmDate.getFullYear()}-${pad(alarmDate.getMonth() + 1)}-${pad(alarmDate.getDate())}T${pad(hours)}:${pad(minutes)}:00`;
+
+        const payload = {
+            ...(isEdit ? { id: parseInt(alarmId, 10) } : {}
+            ),
+            user_id: parseInt(userIdInput.value, 10) || 1,
+            alarm_time: isoDateTime,
+            sound_file: soundFileInput.value,
+            enabled: enabledInput.checked
+        };
+
+        const url = isEdit ? `/api/alarms/${alarmId}` : form.dataset.actionCreate;
+        const method = isEdit ? "PUT" : "POST";
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+    window.location.href = window.location.pathname;
+} else {
+    const rawText = await response.text();
+    console.error(`Status ${response.status}:`, rawText);
+    alert(`Failed (${response.status}): ${rawText}`);
+}
+        } catch (err) {
+            console.error("Network error:", err);
+        }
+    });
+
+    // 2. Populate form when "Edit" button is clicked
+    document.querySelectorAll("[data-schedule-edit]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            e.stopImmediatePropagation();
+            alarmIdInput.value = btn.dataset.id;
+            alarmTimeInput.value = (btn.dataset.time || "").slice(0, 5);
+            soundFileInput.value = btn.dataset.sound || "default_alarm.mp3";
+            enabledInput.checked = btn.dataset.enabled === "true";
+
+            formTitle.textContent = `Edit alarm #${btn.dataset.id}`;
+            submitBtn.textContent = "Update alarm";
+            document.getElementById("create-alarm").scrollIntoView({ behavior: "smooth" });
+        });
+    });
+
+    // 3. Handle Delete button
+    document.querySelectorAll("[data-schedule-delete]").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+            e.stopImmediatePropagation();
+            if (!confirm(`Delete ${btn.dataset.label}?`)) return;
+
+            try {
+                const response = await fetch(btn.dataset.url, {
+                    method: "DELETE",
+                    headers: { "Accept": "application/json" }
+                });
+                if (response.ok) {
+                    window.location.href = window.location.pathname;
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    console.error("Delete Error:", errData);
+                }
+            } catch (err) {
+                console.error("Network error:", err);
+            }
+        });
+    });
+
+    // 4. Reset form back to "Create" mode
+    form.addEventListener("reset", () => {
+        alarmIdInput.value = "";
+        formTitle.textContent = "Create alarm";
+        submitBtn.textContent = "Create alarm";
+    });
+});
+</script>
 {% endblock %}

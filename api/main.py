@@ -14,7 +14,7 @@ from api.routes.readings import router as readings_router
 from api.routes.alarm import router as alarm_router
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.templating import Jinja2Templates
-
+from fastapi.encoders import jsonable_encoder
 from contextlib import asynccontextmanager
 
 from api.services.alarm_scheduler import scheduler, load_alarms
@@ -61,7 +61,7 @@ def general_http_exception_handler(request:Request, exception:StarletteHTTPExcep
         )
     return templates.TemplateResponse(
         request,
-        "error.html",
+        "pages/error.html",
         {
         "status_code": exception.status_code,
          "title": exception.status_code,
@@ -71,19 +71,8 @@ def general_http_exception_handler(request:Request, exception:StarletteHTTPExcep
     )
     
 @app.exception_handler(RequestValidationError)
-def validation_exception_handler(request:Request, exception: RequestValidationError):
-    if request.url.path.startswith("/api"):
-            return JSONResponse(
-                status_code = status.HTTP_422_UNPROCESSABLE_CONTENT,
-                content = {"detail": exception.errors()}
-            )
-    return templates.TemplateResponse(
-        request,
-        "pages/error.html",
-        {
-        "status_code": status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "title": status.HTTP_422_UNPROCESSABLE_CONTENT,
-            "message":"Invalid request. Please check your input and try again",
-            },
-        status_code = status.HTTP_422_UNPROCESSABLE_CONTENT,
+async def validation_exception_handler(request: Request, exception: RequestValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        content=jsonable_encoder({"detail": exception.errors()}),
     )
