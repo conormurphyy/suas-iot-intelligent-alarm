@@ -44,6 +44,35 @@
     setInterval(updateClock, 1000);
   }
 
+  /* ---- Build the JSON payload for the alarm form. Ammended by deepseek, promt used: Can you review my Create Alarm flow end-to-end across my Jinja2 template (schedule.html), my frontend JavaScript, and my FastAPI backend (/api/alarms/) to confirm everything matches up and will work? ---- */
+  function nextOccurrenceIso(hhmm) {
+    if (!hhmm) return null;
+    var parts = hhmm.split(':');
+    var hours = parseInt(parts[0], 10);
+    var minutes = parseInt(parts[1], 10);
+    if (isNaN(hours) || isNaN(minutes)) return hhmm;
+    var now = new Date();
+    var d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+    if (d <= now) d.setDate(d.getDate() + 1);
+    return d.toISOString();
+  }
+
+  function buildAlarmPayload(form, editing) {
+    var timeEl = form.querySelector('[name="alarm_time"]');
+    var soundEl = form.querySelector('[name="sound_file"]');
+    var enabledEl = form.querySelector('[name="enabled"]');
+    var payload = {
+      alarm_time: nextOccurrenceIso(timeEl ? timeEl.value : ''),
+      enabled: enabledEl ? enabledEl.checked : true,
+      sound_file: soundEl ? soundEl.value : 'default_alarm.mp3'
+    };
+    if (!editing) {
+      var userEl = form.querySelector('[name="user_id"]');
+      payload.user_id = parseInt(userEl && userEl.value ? userEl.value : '0', 10);
+    }
+    return payload;
+  }
+
   /* ---- Generic async form submission (progressive enhancement) ----
    * Forms tagged with [data-async-form] POST to their `action` via fetch and
    * show success/error toasts. Endpoints are expected on the backend; see the
@@ -57,13 +86,28 @@
     var btn = form.querySelector('[type="submit"]');
     if (btn) btn.disabled = true;
 
+    var isAlarmForm = form.id === 'alarm-form';
     var data = new FormData(form);
     var isFile = Array.from(data.values()).some(function (v) { return v instanceof File; });
     var url = form.action || window.location.href;
-    var options = { method: (form.method || 'POST').toUpperCase(), headers: {}, body: null };
+
+    var editing = isAlarmForm && form.getAttribute('data-edit') === 'true';
+    var editId = form.getAttribute('data-edit-id');
+    if (editing && editId) {
+      url = url.replace(/\/$/, '') + '/' + editId;
+    }
+
+    var options = {
+      method: editing ? 'PATCH' : (form.method || 'POST').toUpperCase(),
+      headers: {},
+      body: null
+    };
 
     if (isFile) {
       options.body = data;
+    } else if (isAlarmForm) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(buildAlarmPayload(form, editing));
     } else {
       options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
       options.body = new URLSearchParams(data).toString();
@@ -131,9 +175,8 @@
     var enabled = form.querySelector('[name="enabled"]');
     if (enabled) enabled.checked = btn.getAttribute('data-enabled') !== 'false';
 
-    var base = form.getAttribute('data-action-create') || form.action;
-    form.action = base.replace(/\/$/, '') + '/' + id + '/update';
     form.setAttribute('data-edit', 'true');
+    form.setAttribute('data-edit-id', id);
 
     var submit = form.querySelector('[type="submit"]');
     if (submit) submit.textContent = 'Update alarm';
@@ -149,6 +192,7 @@
     if (!form) return;
     setTimeout(function () {
       form.removeAttribute('data-edit');
+      form.removeAttribute('data-edit-id');
       form.action = form.getAttribute('data-action-create') || form.action;
       var submit = form.querySelector('[type="submit"]');
       if (submit) submit.textContent = 'Create alarm';
