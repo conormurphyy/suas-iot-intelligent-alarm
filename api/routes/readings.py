@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-import models
-from database import get_db
-from schemas import PressureMatReadingResponse
+from api import models
+from api.database import get_db
+from api.schemas import PressureMatReadingResponse
 
 router = APIRouter(prefix="/api/readings", tags=["Readings"])
 

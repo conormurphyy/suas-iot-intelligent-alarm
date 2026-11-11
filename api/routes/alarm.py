@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-import models
-from database import get_db
-from schemas import AlarmBase, AlarmCreate, AlarmResponse, AlarmUpdate
-
+from api import models
+from api.database import get_db
+from api.schemas import AlarmBase, AlarmCreate, AlarmResponse, AlarmUpdate
+from api.services.alarm_scheduler import schedule_alarm, remove_alarm
 router = APIRouter(prefix="/api/alarms", tags=["Alarms"])
 
 
@@ -25,6 +25,8 @@ def create_alarm(alarm: AlarmCreate, db: Annotated[Session, Depends(get_db)]):
     db.add(new_alarm)
     db.commit()
     db.refresh(new_alarm)
+
+    schedule_alarm(new_alarm)
     return new_alarm
 
 
@@ -67,6 +69,8 @@ def update_alarm(alarm_id: int, alarm: AlarmBase, db: Annotated[Session, Depends
         existing_alarm.sound_file = alarm.sound_file
         db.commit()
         db.refresh(existing_alarm)
+
+        schedule_alarm(existing_alarm)
         return existing_alarm
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
@@ -85,6 +89,8 @@ def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[Sessio
             existing_alarm.sound_file = alarm.sound_file
         db.commit()
         db.refresh(existing_alarm)
+
+        schedule_alarm(existing_alarm)
         return existing_alarm
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
@@ -97,5 +103,7 @@ def delete_alarm(alarm_id: int, db: Annotated[Session, Depends(get_db)]):
     if existing_alarm:
         db.delete(existing_alarm)
         db.commit()
+
+        remove_alarm(alarm_id)
         return
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")

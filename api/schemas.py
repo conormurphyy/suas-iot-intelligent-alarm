@@ -11,6 +11,12 @@ class UserCreate(UserBase):
     password: str = Field(min_length=6, max_length=100)
     image_file: str | None = None
 
+class UserUpdate(BaseModel):
+    username: str | None = Field(default = None, min_length=3, max_length=20)
+    email: EmailStr | None = Field(default = None,  max_length=300)
+    password: str | None = Field(default = None, min_length=6, max_length=100)
+    image_file: str | None = None
+
 class UserResponse(UserBase):
     model_config =ConfigDict(from_attributes=True)
 

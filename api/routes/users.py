@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-import models
-from database import get_db
-from schemas import UserCreate, UserResponse, UserUpdate
+from api import models
+from api.database import get_db
+from api.schemas import UserCreate, UserResponse, UserUpdate
 
 router = APIRouter(prefix="/api/users", tags=["Users"])
 
@@ -16,6 +16,15 @@ router = APIRouter(prefix="/api/users", tags=["Users"])
 # Create User
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
+    result = db.execute(select(models.User).where(models.User.username == user.username))
+    existing_user = result.scalars().first()
+    if existing_user:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail="Username already exists")
+    result = db.execute(select(models.User).where(models.User.email == user.email))
+    existing_email = result.scalars().first()
+    if existing_email:
+        raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, detail="Email already exists")
+    
     new_user = models.User(
         username=user.username,
         email=user.email,
@@ -50,18 +59,32 @@ def get_all_users(db: Annotated[Session, Depends(get_db)]):
 
 # Update User Full
 @router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, user: UserCreate, db: Annotated[Session, Depends(get_db)]):
+def update_user(user_id: int, user_update: UserUpdate, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.User).where(models.User.id == user_id))
-    existing_user = result.scalars().first()
-    if existing_user:
-        existing_user.username = user.username
-        existing_user.email = user.email
-        existing_user.password = user.password
-        existing_user.image_file = user.image_file
-        db.commit()
-        db.refresh(existing_user)
-        return existing_user
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"User with id {user_id} not found")
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if user_update.username is not None and user_update.username != user.username:
+        result = db.execute(select(models.User).where(models.User.username == user_update.username))
+        existing_user = result.scalars().first()
+        if existing_user:
+            raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST,
+                                detail="Username already exists")
+    if user_update.email is not None and user_update.email != user.email:
+        result = db.execute(select(models.User).where(models.User.email == user_update.email))
+        existing_email = result.scalars().first()
+        if existing_email:
+            raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST,
+                            detail="Username already exists")
+    if user_update.username is not None:
+        user.username = user_update.username
+    if user_update.email is not None:
+            user.email = user_update.email 
+    if user_update.image_file is not None:
+            user.image_file = user_update.image_file
+    db.commit()
+    db.refresh(user)
+    return user
 
 
 # Update User Partial

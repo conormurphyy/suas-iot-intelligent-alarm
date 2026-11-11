@@ -6,21 +6,37 @@ from fastapi.staticfiles import StaticFiles
 from typing import Annotated
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from database import Base
-import models
-from routes.pages import router as pages_router
-from routes.users import router as users_router
-from routes.readings import router as readings_router
-from routes.alarm import router as alarm_router
+from api.database import Base, engine, get_db
+import api.models
+from api.routes.pages import router as pages_router
+from api.routes.users import router as users_router
+from api.routes.readings import router as readings_router
+from api.routes.alarm import router as alarm_router
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.templating import Jinja2Templates
-from database import engine, get_db
+
+from contextlib import asynccontextmanager
+
+from api.services.alarm_scheduler import scheduler, load_alarms
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    load_alarms()
+    scheduler.start()
+
+    print("Scheduler started")
+
+    yield
+
+    scheduler.shutdown(wait=False)
 
 templates = Jinja2Templates(directory="../frontend/templates")
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title ="Suas IoT Intelligent Alarm API")
+app = FastAPI(title ="Suas IoT Intelligent Alarm API", lifespan=lifespan)
 
 app.mount("/media", StaticFiles(directory="../frontend/media"), name="media")
 app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
