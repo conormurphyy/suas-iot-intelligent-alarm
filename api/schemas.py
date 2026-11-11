@@ -51,7 +51,7 @@ class AlarmResponse(AlarmBase):
     id: int
     user_id: int
     date_timestamp: datetime.datetime
-    author: UserResponse
+    author: UserResponse | None = None
 
 # Pressure Mat Reading schema
 class PressureMatReadingBase(BaseModel):
