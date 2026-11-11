@@ -1,7 +1,12 @@
 #https://fastapi.tiangolo.com/reference/apirouter/
 
-from fastapi import APIRouter, Request
+from typing_extensions import Annotated
+
+from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
+from select import select
+from api import models
+from api.database import get_db
 
 router = APIRouter()
 
@@ -16,12 +21,13 @@ async def overview(request: Request):
         context={"request": request}
     )
 
-@router.get("/schedule", include_in_schema=False, name="schedule")
-async def schedule(request: Request):
+@router.get("/schedule", name="schedule")
+def schedule(request: Request, db: Annotated[Session, Depends(get_db)]):
+    alarms = db.execute(select(models.Alarm)).scalars().all()
     return templates.TemplateResponse(
         request=request,
         name="pages/schedule.html",
-        context={"request": request}
+        context={"alarms": alarms},
     )
 
 @router.get("/profile", include_in_schema=False, name="profile")
