@@ -15,11 +15,28 @@ from api.routes.alarm import router as alarm_router
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.templating import Jinja2Templates
 
+from contextlib import asynccontextmanager
+
+from api.services.alarm_scheduler import scheduler, load_alarms
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    load_alarms()
+    scheduler.start()
+
+    print("Scheduler started")
+
+    yield
+
+    scheduler.shutdown(wait=False)
+
 templates = Jinja2Templates(directory="../frontend/templates")
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title ="Suas IoT Intelligent Alarm API")
+app = FastAPI(title ="Suas IoT Intelligent Alarm API", lifespan=lifespan)
 
 app.mount("/media", StaticFiles(directory="../frontend/media"), name="media")
 app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
