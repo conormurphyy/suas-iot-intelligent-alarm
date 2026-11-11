@@ -1,0 +1,123 @@
+{% extends "main.html" %}
+
+{% block title %}Profile · Suas{% endblock %}
+{% block page_id %}profile{% endblock %}
+{% block breadcrumb_data %}Home > Profile{% endblock %}
+{% block nav_profile %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="{{ url_for('overview') }}">Home</a><span class="sep" aria-hidden="true">›</span><span class="current" aria-current="page">Profile</span></nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="page-header">
+    <div class="page-header-row">
+        <div>
+            <div class="page-pretitle">Account</div>
+            <h1 class="page-title">Your profile</h1>
+        </div>
+        <div class="page-actions">
+            <button type="submit" form="profile-form" class="btn btn-primary">Save changes</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% set user_name = user.username if user is defined and user.username else '' %}
+{% set user_email = user.email if user is defined and user.email else '' %}
+{% set avatar = user.image_path if (user is defined and user.image_file) else '/static/images/user.png' %}
+
+<div class="row col-4-8">
+    <!-- Profile summary -->
+    <div class="card">
+        <div class="card-body" style="text-align:center;padding:24px 16px">
+            <img src="{{ avatar }}" alt="Profile picture" style="width:96px;height:96px;border-radius:50%;object-fit:cover">
+            <div style="font-size:16px;font-weight:600;color:var(--text);margin-top:12px">{{ user_name or 'Guest' }}</div>
+            <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">{{ user_email or '—' }}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Member since {{ user.date_timestamp.strftime('%d %b %Y') if user is defined and user.date_timestamp else '—' }}</div>
+        </div>
+        <div style="border-top:1px solid var(--border-color-light);padding:16px">
+            <form action="{{ url_for('profile') }}/upload" method="post" enctype="multipart/form-data" data-async-form>
+                <div class="form-group">
+                    <label class="form-label" for="avatar">Profile picture</label>
+                    <input type="file" id="avatar" name="image_file" class="form-control" accept="image/*">
+                    <div class="form-help">PNG, JPG or SVG. Maximum 2&nbsp;MB.</div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-outline btn-sm">Upload new picture</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Profile form -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Personal information</div>
+                <div class="card-subtitle">Update your account details.</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form id="profile-form" action="{{ url_for('profile') }}" method="post" data-async-form>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username <span class="required">*</span></label>
+                        <input type="text" id="username" name="username" class="form-control" value="{{ user_name }}" minlength="3" maxlength="20" required>
+                        <div class="form-help">3–20 characters.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" class="form-control" value="{{ user_email }}" required>
+                    </div>
+                </div>
+                <div class="form-actions right">
+                    <button type="reset" class="btn btn-outline">Reset</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="row col-2">
+    <!-- Change password -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Change password</div>
+                <div class="card-subtitle">Use at least 8 characters.</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('profile') }}/password" method="post" data-async-form>
+                <div class="form-group">
+                    <label class="form-label" for="current_password">Current password</label>
+                    <input type="password" id="current_password" name="current_password" class="form-control" required autocomplete="current-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="new_password">New password</label>
+                    <input type="password" id="new_password" name="new_password" class="form-control" minlength="8" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm new password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" minlength="8" required autocomplete="new-password" data-match="#new_password">
+                </div>
+                <div class="form-actions right">
+                    <button type="submit" class="btn btn-primary">Update password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Account details -->
+    <div class="card">
+        <div class="card-header"><div class="card-title">Account details</div></div>
+        <div class="card-body" style="padding:6px 16px">
+            <div class="toggle-row"><div><div class="label">Username</div><div class="desc">{{ user_name or '—' }}</div></div></div>
+            <div class="toggle-row"><div><div class="label">Email</div><div class="desc">{{ user_email or '—' }}</div></div></div>
+            <div class="toggle-row"><div><div class="label">Account created</div><div class="desc">{{ user.date_timestamp.strftime('%d %b %Y') if user is defined and user.date_timestamp else '—' }}</div></div></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
