@@ -37,6 +37,8 @@ async def lifespan(app: FastAPI):
     client.connect(MQTT_BROKER, MQTT_PORT, 60)
     client.loop_start()
 
+    app.state.mqtt_client = client
+    
     load_alarms(client)
     scheduler.start()
 
