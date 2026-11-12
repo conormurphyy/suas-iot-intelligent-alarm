@@ -31,9 +31,13 @@ Desktop.ini
 *.log
 
 # Database
+<<<<<<< HEAD
 *.db
 mosquitto/data/
 
 # Mosquitto credentials and runtime data
 mosquitto/config/passwordfile
 mosquitto/data/
+=======
+*.db
+>>>>>>> origin/FastAPI_Dev
