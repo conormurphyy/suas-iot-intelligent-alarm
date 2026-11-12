@@ -2,7 +2,6 @@ from datetime import datetime, UTC
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
-
 from sqlalchemy.orm import Session
 
 from api.database import SessionLocal
@@ -14,7 +13,7 @@ scheduler = BackgroundScheduler(timezone="Europe/Dublin")
 
 
 # Trigger alarm
-def trigger_alarm(alarm_id: int):
+def trigger_alarm(alarm_id: int, client):
 
     db: Session = SessionLocal()
 
@@ -35,13 +34,11 @@ def trigger_alarm(alarm_id: int):
 
     print(f"Alarm {alarm_id} triggered!")
 
-    from hardware.alarm_controller import run_alarm
-
-    run_alarm()
+    client.publish("alarm/trigger", "on")
 
 
 # Schedule alarm
-def schedule_alarm(alarm: Alarm):
+def schedule_alarm(alarm: Alarm, client):
 
     job_id = str(alarm.id)
 
@@ -64,7 +61,7 @@ def schedule_alarm(alarm: Alarm):
     scheduler.add_job(
         trigger_alarm,
         trigger=DateTrigger(run_date=alarm_time),
-        args=[alarm.id],
+        args=[alarm.id, client],
         id=job_id,
         replace_existing=True
     )
@@ -82,7 +79,7 @@ def remove_alarm(alarm_id: int):
 
 
 # Load existing alarms
-def load_alarms():
+def load_alarms(client):
 
     db: Session = SessionLocal()
 
@@ -92,7 +89,7 @@ def load_alarms():
         ).all()
 
         for alarm in alarms:
-            schedule_alarm(alarm)
+            schedule_alarm(alarm, client)
 
     finally:
         db.close()

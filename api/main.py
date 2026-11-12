@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -16,19 +17,35 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.encoders import jsonable_encoder
 from contextlib import asynccontextmanager
-
 from api.services.alarm_scheduler import scheduler, load_alarms
+import paho.mqtt.client as mqtt
+
+MQTT_BROKER = "mosquitto"
+MQTT_PORT = 1883
+
+    
+def on_connect(client, userdata, flags, reason_code, properties):
+    print(f"Connected to EC2 MQTT Broker with result code {reason_code}")
 
 
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+client.on_connect = on_connect
+    
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    load_alarms()
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    client.loop_start()
+
+    load_alarms(client)
     scheduler.start()
 
     print("Scheduler started")
 
     yield
+
+    client.loop_stop()
+    client.disconnect()
 
     scheduler.shutdown(wait=False)
 
