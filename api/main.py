@@ -19,6 +19,8 @@ from fastapi.encoders import jsonable_encoder
 from contextlib import asynccontextmanager
 from api.services.alarm_scheduler import scheduler, load_alarms
 import paho.mqtt.client as mqtt
+import os
+
 
 MQTT_BROKER = "mosquitto"
 MQTT_PORT = 1883
@@ -29,6 +31,10 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+client.username_pw_set(
+    os.getenv("MQTT_USERNAME"),
+    os.getenv("MQTT_PASSWORD")
+)
 client.on_connect = on_connect
     
 @asynccontextmanager
@@ -47,11 +53,9 @@ async def lifespan(app: FastAPI):
     yield
 
     scheduler.shutdown(wait=False)
-    
+
     client.loop_stop()
     client.disconnect()
-
-    scheduler.shutdown(wait=False)
 
 templates = Jinja2Templates(directory="../frontend/templates")
 

@@ -25,12 +25,6 @@ class UserResponse(UserBase):
     image_file: str | None = None
     image_path: str
 
-class UserUpdate(BaseModel):
-    username: str | None = Field(default = None, min_length=3, max_length=20)
-    email: EmailStr | None = Field(default = None,  max_length=300)
-    password: str | None = Field(default = None, min_length=6, max_length=100)
-    image_file: str | None = None
-
 # Alarm Schema
 class AlarmBase(BaseModel):
     alarm_time: datetime.datetime
