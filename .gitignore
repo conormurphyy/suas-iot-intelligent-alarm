@@ -32,3 +32,8 @@ Desktop.ini
 
 # Database
 *.db
+mosquitto/data/
+
+# Mosquitto credentials and runtime data
+mosquitto/config/passwordfile
+mosquitto/data/
