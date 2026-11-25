@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 2. Populate form when "Edit" button is clicked
-    document.querySelectorAll("[data-schedule-edit]").forEach((btn) => {
+    document.querySelectorAll("[data-edit-alarm]").forEach((btn) => {
         btn.addEventListener("click", (e) => {
             e.stopImmediatePropagation();
             alarmIdInput.value = btn.dataset.id;
@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // 3. Handle Delete button
-    document.querySelectorAll("[data-schedule-delete]").forEach((btn) => {
+    document.querySelectorAll("[data-delete-alarm]").forEach((btn) => {
         btn.addEventListener("click", async (e) => {
             e.stopImmediatePropagation();
             if (!confirm(`Delete ${btn.dataset.label}?`)) return;

@@ -1,5 +1,6 @@
 #https://fastapi.tiangolo.com/reference/apirouter/
 
+from datetime import UTC, datetime
 from typing_extensions import Annotated
 
 from fastapi import APIRouter, Depends, Request
@@ -15,11 +16,32 @@ templates = Jinja2Templates(directory="../frontend/templates")
 
 @router.get("/", include_in_schema=False, name="home")
 @router.get("/overview", include_in_schema=False, name="overview")
-async def overview(request: Request):
+def overview(request: Request, db: Annotated[Session, Depends(get_db)]):
+    user = _get_or_create_demo_user(db)
+    alarms = db.execute(select(models.Alarm)).scalars().all()
+    readings = db.execute(select(models.PressureMatReading)).scalars().all()
+
+    now = datetime.now(UTC)
+    next_alarm = None
+    upcoming = [alarm for alarm in alarms if alarm.enabled and alarm.alarm_time is not None]
+    for alarm in sorted(upcoming, key=lambda a: a.alarm_time):
+        alarm_at = alarm.alarm_time
+        if alarm_at.tzinfo is None:
+            alarm_at = alarm_at.replace(tzinfo=UTC)
+        if alarm_at >= now:
+            next_alarm = alarm
+            break
+
     return templates.TemplateResponse(
         request=request,
         name="pages/index.html",
-        context={"request": request}
+        context={
+            "request": request,
+            "user": user,
+            "alarms": alarms,
+            "readings": readings,
+            "next_alarm": next_alarm,
+        },
     )
 
 @router.get("/schedule", name="schedule")
