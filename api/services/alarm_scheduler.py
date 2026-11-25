@@ -35,9 +35,9 @@ def trigger_alarm(alarm_id: int):
 
     print(f"Alarm {alarm_id} triggered!")
 
-    from hardware.alarm_controller import run_alarm
+    from api.services.mqtt_client import publish_alarm
 
-    run_alarm()
+    publish_alarm()
 
 
 # Schedule alarm
