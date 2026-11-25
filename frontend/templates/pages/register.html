@@ -1,0 +1,115 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Create account · Suas{% endblock %}
+
+{% block auth_header %}
+<div class="auth-title">Create your account</div>
+<div class="auth-subtitle">Register to start managing your smart alarms.</div>
+{% endblock %}
+
+{% block auth_form %}
+{% set errors = field_errors | default({}) %}
+{% set data = form_data | default({}) %}
+
+<form method="post" action="{{ url_for('register_submit') }}" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <div class="input-group">
+            <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="5" r="3"/><path d="M2 14a6 6 0 0112 0"/></svg>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                class="form-control{% if errors.get('username') %} is-invalid{% endif %}"
+                placeholder="conor_m"
+                value="{{ data.get('username', '') }}"
+                minlength="3"
+                maxlength="20"
+                autocomplete="username"
+                required
+            >
+        </div>
+        {% if errors.get('username') %}
+        <div class="form-error">{{ errors.get('username') }}</div>
+        {% else %}
+        <div class="form-hint">3–20 characters (letters, numbers, underscores, dots or hyphens)</div>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <div class="input-group">
+            <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 5l6 4 6-4"/></svg>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control{% if errors.get('email') %} is-invalid{% endif %}"
+                placeholder="you@example.com"
+                value="{{ data.get('email', '') }}"
+                maxlength="300"
+                autocomplete="email"
+                required
+            >
+        </div>
+        {% if errors.get('email') %}
+        <div class="form-error">{{ errors.get('email') }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-group">
+            <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control{% if errors.get('password') %} is-invalid{% endif %}"
+                placeholder="At least 8 characters"
+                minlength="8"
+                maxlength="72"
+                autocomplete="new-password"
+                required
+            >
+        </div>
+        {% if errors.get('password') %}
+        <div class="form-error">{{ errors.get('password') }}</div>
+        {% else %}
+        <div class="form-hint">Minimum 8 characters</div>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="confirm_password">Confirm password</label>
+        <div class="input-group">
+            <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+            <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                class="form-control{% if errors.get('confirm_password') %} is-invalid{% endif %}"
+                placeholder="Repeat your password"
+                minlength="8"
+                maxlength="72"
+                autocomplete="new-password"
+                data-match="#password"
+                required
+            >
+        </div>
+        {% if errors.get('confirm_password') %}
+        <div class="form-error">{{ errors.get('confirm_password') }}</div>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;height:38px;margin-top:8px">
+        Create account
+    </button>
+</form>
+{% endblock %}
+
+{% block auth_footer %}
+Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+{% endblock %}
