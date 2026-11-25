@@ -40,7 +40,6 @@
     <div class="card-body">
         <form id="alarm-form" action="{{ url_for('create_alarm') }}" method="post" data-action-create="{{ url_for('create_alarm') }}">
             <input type="hidden" name="id" id="alarm_id" value="">
-            <input type="hidden" name="user_id" id="user_id" value="{{ user.id if user is defined and user else 1 }}">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="alarm_time">Alarm time <span class="required">*</span></label>
@@ -137,7 +136,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const formTitle = document.querySelector("[data-form-title]");
     const submitBtn = document.getElementById("submit-btn");
     const alarmIdInput = document.getElementById("alarm_id");
-    const userIdInput = document.getElementById("user_id");
     const alarmTimeInput = document.getElementById("alarm_time");
     const soundFileInput = document.getElementById("sound_file");
     const enabledInput = document.getElementById("enabled");
@@ -169,9 +167,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const isoDateTime = `${alarmDate.getFullYear()}-${pad(alarmDate.getMonth() + 1)}-${pad(alarmDate.getDate())}T${pad(hours)}:${pad(minutes)}:00`;
 
         const payload = {
-            ...(isEdit ? { id: parseInt(alarmId, 10) } : {}
-            ),
-            user_id: parseInt(userIdInput.value, 10) || 1,
             alarm_time: isoDateTime,
             sound_file: soundFileInput.value,
             enabled: enabledInput.checked
