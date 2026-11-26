@@ -28,18 +28,26 @@ def _resolve_user_id(request: Request, body_user_id: int | None) -> int:
 
 # Create Alarm
 @router.post("/", response_model=AlarmResponse, status_code=status.HTTP_201_CREATED)
-def create_alarm(alarm: AlarmCreate, request: Request, db: Annotated[Session, Depends(get_db)]):
+def create_alarm(
+    alarm: AlarmCreate,
+    request: Request,
+    db: Annotated[Session, Depends(get_db)]
+):
+    user_id = _resolve_user_id(request, alarm.user_id)
+
     new_alarm = models.Alarm(
         user_id=user_id,
         alarm_time=alarm.alarm_time,
         enabled=alarm.enabled,
         sound_file=alarm.sound_file,
     )
+
     db.add(new_alarm)
     db.commit()
     db.refresh(new_alarm)
 
     schedule_alarm(new_alarm, request.app.state.mqtt_client)
+
     return new_alarm
 
 

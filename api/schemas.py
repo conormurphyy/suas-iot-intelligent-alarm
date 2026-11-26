@@ -2,6 +2,11 @@ import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, EmailStr
 
+# Authentication schema
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
 # User schema
 class UserBase(BaseModel):
     username: str = Field(min_length=3, max_length=20)
@@ -32,7 +37,7 @@ class AlarmBase(BaseModel):
     sound_file: str = Field(default="default_sound.mp3", max_length=200)
 
 class AlarmCreate(AlarmBase):
-    user_id: int
+    user_id: int | None = None
 
 class AlarmUpdate(BaseModel):
     alarm_time: datetime.datetime | None = None
