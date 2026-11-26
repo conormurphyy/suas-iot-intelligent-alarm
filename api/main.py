@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
@@ -32,15 +33,16 @@ async def lifespan(app: FastAPI):
     stop_mqtt()
 
 
-templates = Jinja2Templates(directory="../frontend/templates")
+FRONTEND_DIR = Path("frontend") if Path("frontend").exists() else Path("../frontend")
+templates = Jinja2Templates(directory=str(FRONTEND_DIR / "templates"))
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Suas IoT Intelligent Alarm API", lifespan=lifespan)
 
-app.mount("/media", StaticFiles(directory="../frontend/media"), name="media")
-app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
-app.mount("/templates", StaticFiles(directory="../frontend/templates"), name="templates")
+app.mount("/media", StaticFiles(directory=str(FRONTEND_DIR / "media")), name="media")
+app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR / "static")), name="static")
+app.mount("/templates", StaticFiles(directory=str(FRONTEND_DIR / "templates")), name="templates")
 
 app.include_router(pages_router)
 app.include_router(users_router)

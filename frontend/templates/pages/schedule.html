@@ -17,10 +17,10 @@
             <h1 class="page-title">Schedule</h1>
         </div>
         <div class="page-actions">
-            <a class="btn btn-primary" href="#create-alarm" id="new-alarm-btn">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+            <button type="button" class="btn btn-primary" id="new-alarm-btn">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>
                 New alarm
-            </a>
+            </button>
         </div>
     </div>
 </div>
@@ -29,181 +29,363 @@
 {% block content %}
 {% set alarm_list = alarms | default([]) %}
 
-<!-- Create / edit alarm -->
-<div class="card" id="create-alarm">
-    <div class="card-header">
-        <div>
-            <div class="card-title" data-form-title>Create alarm</div>
-            <div class="card-subtitle">Set a time, pick a sound and choose whether it is enabled.</div>
+<div class="row col-4-8" style="align-items:start">
+    <!-- Left column: Create / Edit Alarm -->
+    <div class="card" id="create-alarm">
+        <div class="card-header">
+            <div>
+                <div class="card-title" data-form-title>Create alarm</div>
+                <div class="card-subtitle" data-form-subtitle>Set a wake-up time and alarm sound.</div>
+            </div>
         </div>
-    </div>
-    <div class="card-body">
-        <form id="alarm-form" action="{{ url_for('create_alarm') }}" method="post" data-action-create="{{ url_for('create_alarm') }}">
-            <input type="hidden" name="id" id="alarm_id" value="">
-            <div class="form-row">
+        <div class="card-body">
+            <div class="alert alert-error" id="schedule-error" role="alert" style="display:none">
+                <svg class="alert-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.8v3.8M8 11.2h.01"/></svg>
+                <div class="alert-body" id="schedule-error-text"></div>
+            </div>
+
+            <form id="alarm-form" action="{{ url_for('create_alarm') }}" method="post">
+                <input type="hidden" name="id" id="alarm_id" value="">
+
                 <div class="form-group">
                     <label class="form-label" for="alarm_time">Alarm time <span class="required">*</span></label>
                     <input type="time" id="alarm_time" name="alarm_time" class="form-control" required>
+                    <div class="form-help">Schedules the next occurrence of this time.</div>
                 </div>
+
                 <div class="form-group">
-                    <label class="form-label" for="sound_file">Sound</label>
+                    <label class="form-label" for="sound_file">Alarm sound</label>
                     <select id="sound_file" name="sound_file" class="form-control">
-                        <option value="default_alarm.mp3">Default alarm</option>
-                        {# Add more options here for each sound file in frontend/media/sounds/ #}
+                        <option value="default_alarm.mp3">Default buzzer</option>
                     </select>
-                    <div class="form-help">Sound files are stored in <code>frontend/media/sounds/</code>.</div>
                 </div>
+
+                <div class="form-group" style="margin-bottom:4px">
+                    <label class="form-check" for="enabled">
+                        <input type="checkbox" id="enabled" name="enabled" value="true" checked>
+                        Enabled — trigger alarm at scheduled time
+                    </label>
+                </div>
+
+                <div class="form-actions right">
+                    <button type="reset" class="btn btn-outline" id="reset-btn">Reset</button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn">Create alarm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right column: Existing Alarms -->
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Your alarms</div>
+                <div class="card-subtitle">{{ alarm_list | length }} {{ 'alarm' if (alarm_list | length) == 1 else 'alarms' }} configured</div>
             </div>
-            <div class="form-group">
-                <label style="display:flex;align-items:center;gap:8px;font-size:.875rem;color:var(--text)">
-                    <input type="checkbox" id="enabled" name="enabled" value="true" checked style="margin:0">
-                    Enabled — sound at the scheduled time
-                </label>
+        </div>
+
+        {% if alarm_list %}
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Scheduled For</th>
+                            <th>Sound</th>
+                            <th>Status</th>
+                            <th style="text-align:right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alarm in alarm_list %}
+                        {% set time_str = alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else alarm.alarm_time %}
+                        <tr data-alarm-row="{{ alarm.id }}">
+                            <td class="cell-strong" style="font-size:15px;font-variant-numeric:tabular-nums">{{ time_str }}</td>
+                            <td>{{ alarm.alarm_time.strftime('%a, %d %b %Y') if alarm.alarm_time and alarm.alarm_time.strftime is defined else '—' }}</td>
+                            <td><span class="chip">{{ alarm.sound_file | default('default_alarm.mp3') }}</span></td>
+                            <td>
+                                <div style="display:inline-flex;align-items:center;gap:8px">
+                                    <button
+                                        type="button"
+                                        class="toggle{% if alarm.enabled %} on{% endif %}"
+                                        data-toggle-alarm
+                                        data-url="/api/alarms/{{ alarm.id }}"
+                                        data-enabled="{{ 'true' if alarm.enabled else 'false' }}"
+                                        aria-label="Toggle alarm {{ time_str }}"
+                                        title="Click to {{ 'disable' if alarm.enabled else 'enable' }}"
+                                        style="border:0"
+                                    ></button>
+                                    {% if alarm.enabled %}
+                                        <span class="status status-green">Enabled</span>
+                                    {% else %}
+                                        <span class="status status-red">Disabled</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="text-align:right;white-space:nowrap">
+                                <div style="display:inline-flex;gap:6px;justify-content:flex-end">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline btn-sm"
+                                        data-edit-alarm
+                                        data-id="{{ alarm.id }}"
+                                        data-time="{{ time_str }}"
+                                        data-sound="{{ alarm.sound_file | default('default_alarm.mp3') }}"
+                                        data-enabled="{{ 'true' if alarm.enabled else 'false' }}"
+                                    >Edit</button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-danger btn-sm"
+                                        data-delete-alarm
+                                        data-id="{{ alarm.id }}"
+                                        data-url="/api/alarms/{{ alarm.id }}"
+                                        data-label="{{ time_str }}"
+                                    >Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="form-actions right">
-                <button type="reset" class="btn btn-outline" id="reset-btn">Reset</button>
-                <button type="submit" class="btn btn-primary" id="submit-btn">Create alarm</button>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
-        </form>
+            <div class="empty-state-title">No alarms yet</div>
+            <div class="empty-state-desc">Use the form on the left to schedule your first wake-up alarm.</div>
+        </div>
+        {% endif %}
     </div>
 </div>
 
-<!-- Existing alarms -->
-<div class="card">
-    <div class="card-header">
-        <div>
-            <div class="card-title">Your alarms</div>
-            <div class="card-subtitle">Manage your scheduled alarms.</div>
+<!-- Delete Confirmation Modal (uses built-in Gentelella modal classes) -->
+<div class="modal-backdrop" id="delete-modal" style="display:none">
+    <div class="modal-dialog modal-sm" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+        <div class="modal-header">
+            <h2 class="modal-title" id="delete-modal-title">Delete alarm?</h2>
+            <button type="button" class="modal-close" data-close-delete-modal aria-label="Close">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:13.5px;color:var(--text-secondary);line-height:1.55;margin:0">
+                Are you sure you want to delete the <strong id="delete-modal-label" style="color:var(--text)"></strong> alarm? This action cannot be undone.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-close-delete-modal>Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete alarm</button>
         </div>
     </div>
-    {% if alarm_list %}
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Sound</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th style="width:140px;text-align:right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for alarm in alarm_list %}
-                <tr data-alarm-row>
-                    <td class="cell-strong">{{ alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else alarm.alarm_time }}</td>
-                    <td>{{ alarm.sound_file | default('default_alarm.mp3') }}</td>
-                    <td>
-                        {% if alarm.enabled %}
-                            <span class="status status-green">Enabled</span>
-                        {% else %}
-                            <span class="status status-red">Disabled</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ alarm.date_timestamp.strftime('%d %b %Y') if alarm.date_timestamp and alarm.date_timestamp.strftime is defined else alarm.date_timestamp }}</td>
-                    <td style="text-align:right">
-                        <button type="button" class="btn btn-outline btn-sm" data-edit-alarm
-                            data-id="{{ alarm.id }}"
-                            data-time="{{ alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else alarm.alarm_time }}"
-                            data-sound="{{ alarm.sound_file | default('default_alarm.mp3') }}"
-                            data-enabled="{{ 'true' if alarm.enabled else 'false' }}">Edit</button>
-                        <button type="button" class="btn btn-danger btn-sm" data-delete-alarm
-                            data-id="{{ alarm.id }}"
-                            data-url="/api/alarms/{{ alarm.id }}"
-                            data-label="alarm #{{ alarm.id }}">Delete
-                        </button>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <div class="empty-state" style="padding:40px 16px">
-        <div class="empty-state-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div class="empty-state-title">No alarms yet</div>
-        <div class="empty-state-desc">Create your first alarm above to start waking up on time.</div>
-        <div class="empty-state-actions"><a class="btn btn-primary" href="#create-alarm">Create an alarm</a></div>
-    </div>
-    {% endif %}
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
-const form = document.getElementById("alarm-form");
-const formTitle = document.querySelector("[data-form-title]");
-const submitBtn = document.getElementById("submit-btn");
-const alarmIdInput = document.getElementById("alarm_id");
-const alarmTimeInput = document.getElementById("alarm_time");
-const soundFileInput = document.getElementById("sound_file");
-const enabledInput = document.getElementById("enabled");
+(function () {
+    const form = document.getElementById("alarm-form");
+    const formTitle = document.querySelector("[data-form-title]");
+    const formSubtitle = document.querySelector("[data-form-subtitle]");
+    const submitBtn = document.getElementById("submit-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const newAlarmBtn = document.getElementById("new-alarm-btn");
+    const alarmIdInput = document.getElementById("alarm_id");
+    const alarmTimeInput = document.getElementById("alarm_time");
+    const soundFileInput = document.getElementById("sound_file");
+    const enabledInput = document.getElementById("enabled");
+    const errorBox = document.getElementById("schedule-error");
+    const errorText = document.getElementById("schedule-error-text");
 
-// Create or update an alarm
-form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+    const deleteModal = document.getElementById("delete-modal");
+    const deleteModalLabel = document.getElementById("delete-modal-label");
+    const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+    let pendingDeleteUrl = null;
 
-    const [hours, minutes] = alarmTimeInput.value.split(":").map(Number);
-    const alarmDate = new Date();
-    alarmDate.setHours(hours, minutes, 0, 0);
-    if (alarmDate <= new Date()) {
-        alarmDate.setDate(alarmDate.getDate() + 1);
+    function showError(msg) {
+        errorText.textContent = msg;
+        errorBox.style.display = "flex";
     }
 
-    const alarmId = alarmIdInput.value.trim();
-    const url = alarmId ? `/api/alarms/${alarmId}` : "/api/alarms/";
-    const method = alarmId ? "PUT" : "POST";
-
-    const response = await fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            alarm_time: alarmDate.toISOString(),
-            sound_file: soundFileInput.value,
-            enabled: enabledInput.checked,
-        }),
-    });
-
-    if (response.ok) {
-        window.location.reload();
-    } else {
-        alert("Could not save alarm.");
+    function clearError() {
+        errorBox.style.display = "none";
+        errorText.textContent = "";
     }
-});
 
-// Load alarm values into the form when clicking Edit
-document.querySelectorAll("[data-edit-alarm]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-        alarmIdInput.value = btn.dataset.id;
-        alarmTimeInput.value = (btn.dataset.time || "").slice(0, 5);
-        soundFileInput.value = btn.dataset.sound || "default_alarm.mp3";
-        enabledInput.checked = btn.dataset.enabled === "true";
+    function exitEditMode() {
+        alarmIdInput.value = "";
+        formTitle.textContent = "Create alarm";
+        formSubtitle.textContent = "Set a wake-up time and alarm sound.";
+        submitBtn.textContent = "Create alarm";
+        resetBtn.textContent = "Reset";
+        clearError();
+    }
 
-        formTitle.textContent = `Edit alarm #${btn.dataset.id}`;
-        submitBtn.textContent = "Update alarm";
-        form.scrollIntoView({ behavior: "smooth" });
+    // "New alarm" header button prepares the form in Create mode
+    newAlarmBtn.addEventListener("click", () => {
+        form.reset();
+        exitEditMode();
+        document.getElementById("create-alarm").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        alarmTimeInput.focus();
     });
-});
 
-// Delete an alarm
-document.querySelectorAll("[data-delete-alarm]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-        if (!confirm(`Delete ${btn.dataset.label}?`)) return;
+    // Reset / Cancel button returns form to Create mode
+    form.addEventListener("reset", () => {
+        setTimeout(exitEditMode, 0);
+    });
 
-        const response = await fetch(btn.dataset.url, { method: "DELETE" });
-        if (response.ok) {
-            window.location.reload();
-        } else {
-            alert("Could not delete alarm.");
+    // Create (POST) or Update (PUT) alarm
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearError();
+
+        if (!alarmTimeInput.value) {
+            showError("Please select an alarm time.");
+            return;
+        }
+
+        const [hours, minutes] = alarmTimeInput.value.split(":").map(Number);
+        const alarmDate = new Date();
+        alarmDate.setHours(hours, minutes, 0, 0);
+        if (alarmDate <= new Date()) {
+            alarmDate.setDate(alarmDate.getDate() + 1);
+        }
+
+        const alarmId = alarmIdInput.value.trim();
+        const url = alarmId ? `/api/alarms/${alarmId}` : "/api/alarms/";
+        const method = alarmId ? "PUT" : "POST";
+
+        submitBtn.disabled = true;
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    alarm_time: alarmDate.toISOString(),
+                    sound_file: soundFileInput.value,
+                    enabled: enabledInput.checked,
+                }),
+            });
+
+            if (response.ok) {
+                window.location.reload();
+                return;
+            }
+            const err = await response.json().catch(() => ({}));
+            showError(typeof err.detail === "string" ? err.detail : "Could not save alarm. Please try again.");
+        } catch (_) {
+            showError("Network error while saving alarm.");
+        } finally {
+            submitBtn.disabled = false;
         }
     });
-});
 
-// Reset form back to Create mode
-form.addEventListener("reset", () => {
-    alarmIdInput.value = "";
-    formTitle.textContent = "Create alarm";
-    submitBtn.textContent = "Create alarm";
-});
+    // Populate form when "Edit" is clicked
+    document.querySelectorAll("[data-edit-alarm]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            clearError();
+            alarmIdInput.value = btn.dataset.id;
+            alarmTimeInput.value = (btn.dataset.time || "").slice(0, 5);
+            soundFileInput.value = btn.dataset.sound || "default_alarm.mp3";
+            enabledInput.checked = btn.dataset.enabled === "true";
+
+            formTitle.textContent = `Edit alarm #${btn.dataset.id}`;
+            formSubtitle.textContent = "Update the fields below or click Cancel.";
+            submitBtn.textContent = "Update alarm";
+            resetBtn.textContent = "Cancel";
+
+            document.getElementById("create-alarm").scrollIntoView({ behavior: "smooth", block: "nearest" });
+            alarmTimeInput.focus();
+        });
+    });
+
+    // Quick enable/disable toggle switch (PATCH)
+    document.querySelectorAll("[data-toggle-alarm]").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const nextEnabled = btn.dataset.enabled !== "true";
+            btn.disabled = true;
+            try {
+                const response = await fetch(btn.dataset.url, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ enabled: nextEnabled }),
+                });
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    showError("Could not update alarm status.");
+                }
+            } catch (_) {
+                showError("Network error while updating alarm.");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+
+    // Open Delete Confirmation Modal
+    function openDeleteModal(url, label) {
+        pendingDeleteUrl = url;
+        deleteModalLabel.textContent = label || "selected";
+        deleteModal.style.display = "flex";
+        document.body.classList.add("modal-open");
+        requestAnimationFrame(() => deleteModal.classList.add("show"));
+        confirmDeleteBtn.focus();
+    }
+
+    function closeDeleteModal() {
+        pendingDeleteUrl = null;
+        deleteModal.classList.remove("show");
+        document.body.classList.remove("modal-open");
+        setTimeout(() => {
+            if (!deleteModal.classList.contains("show")) {
+                deleteModal.style.display = "none";
+            }
+        }, 180);
+    }
+
+    document.querySelectorAll("[data-delete-alarm]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+            openDeleteModal(btn.dataset.url, btn.dataset.label);
+        });
+    });
+
+    document.querySelectorAll("[data-close-delete-modal]").forEach((btn) => {
+        btn.addEventListener("click", closeDeleteModal);
+    });
+
+    deleteModal.addEventListener("click", (e) => {
+        if (e.target === deleteModal) closeDeleteModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && deleteModal.classList.contains("show")) {
+            closeDeleteModal();
+        }
+    });
+
+    confirmDeleteBtn.addEventListener("click", async () => {
+        if (!pendingDeleteUrl) return;
+        confirmDeleteBtn.disabled = true;
+        try {
+            const response = await fetch(pendingDeleteUrl, { method: "DELETE" });
+            if (response.ok) {
+                window.location.reload();
+                return;
+            }
+            closeDeleteModal();
+            showError("Could not delete alarm.");
+        } catch (_) {
+            closeDeleteModal();
+            showError("Network error while deleting alarm.");
+        } finally {
+            confirmDeleteBtn.disabled = false;
+        }
+    });
+})();
 </script>
 {% endblock %}

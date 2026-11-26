@@ -1,6 +1,7 @@
 # https://fastapi.tiangolo.com/reference/apirouter/
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, Request, status
@@ -15,7 +16,8 @@ from api.database import get_db
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="../frontend/templates")
+FRONTEND_DIR = Path("frontend") if Path("frontend").exists() else Path("../frontend")
+templates = Jinja2Templates(directory=str(FRONTEND_DIR / "templates"))
 
 
 def _get_logged_in_user(request: Request, db: Session) -> models.User | None:
@@ -31,6 +33,13 @@ def _get_logged_in_user(request: Request, db: Session) -> models.User | None:
         return None
 
 
+def _alarm_sort_key(alarm: models.Alarm) -> datetime:
+    dt = alarm.alarm_time
+    if dt is None:
+        return datetime.max.replace(tzinfo=UTC)
+    return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
+
+
 @router.get("/", include_in_schema=False, name="home")
 @router.get("/overview", include_in_schema=False, name="overview")
 def overview(request: Request, db: Annotated[Session, Depends(get_db)]):
@@ -38,7 +47,10 @@ def overview(request: Request, db: Annotated[Session, Depends(get_db)]):
     if user is None:
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
-    alarms = db.execute(select(models.Alarm).where(models.Alarm.user_id == user.id)).scalars().all()
+    alarms = sorted(
+        db.execute(select(models.Alarm).where(models.Alarm.user_id == user.id)).scalars().all(),
+        key=_alarm_sort_key,
+    )
     readings = (
         db.execute(
             select(models.PressureMatReading).where(models.PressureMatReading.user_id == user.id)
@@ -77,7 +89,10 @@ def schedule(request: Request, db: Annotated[Session, Depends(get_db)]):
     if user is None:
         return RedirectResponse(url="/login", status_code=status.HTTP_303_SEE_OTHER)
 
-    alarms = db.execute(select(models.Alarm).where(models.Alarm.user_id == user.id)).scalars().all()
+    alarms = sorted(
+        db.execute(select(models.Alarm).where(models.Alarm.user_id == user.id)).scalars().all(),
+        key=_alarm_sort_key,
+    )
     return templates.TemplateResponse(
         request=request,
         name="pages/schedule.html",

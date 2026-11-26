@@ -1,8 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><title>Error {{ status_code }}</title></head>
+<html lang="en" data-sw="off">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error {{ status_code }} · Suas</title>
+    <link rel="icon" href="{{ url_for('static', path='images/favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/main-v4-DB_ReeJG.css') }}">
+    <script>(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var theme=t||(d?'dark':'light');document.documentElement.setAttribute('data-theme',theme);}catch(e){}})();</script>
+</head>
 <body>
-  <h1>Error {{ title }}</h1>
-  <p>{{ message }}</p>
+<div class="error-page">
+    <div class="error-content">
+        <div class="error-code">{{ status_code }}</div>
+        <div class="error-title">Something went wrong</div>
+        <div class="error-message">{{ message or "The page you requested could not be found." }}</div>
+        <div class="error-actions">
+            <a href="{{ url_for('overview') }}" class="btn btn-primary">Back to dashboard</a>
+        </div>
+    </div>
+</div>
 </body>
 </html>
