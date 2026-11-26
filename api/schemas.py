@@ -30,6 +30,11 @@ class UserResponse(UserBase):
     image_path: str
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
 # Alarm Schema
 class AlarmBase(BaseModel):
     alarm_time: datetime.datetime
