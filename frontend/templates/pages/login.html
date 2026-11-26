@@ -1,0 +1,68 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Sign in · Suas{% endblock %}
+
+{% block auth_header %}
+<div class="auth-title">Welcome back</div>
+<div class="auth-subtitle">Sign in to continue to your alarm dashboard.</div>
+{% endblock %}
+
+{% block auth_form %}
+{% set errors = field_errors | default({}) %}
+{% set data = form_data | default({}) %}
+
+<form method="post" action="{{ url_for('login_submit') }}" novalidate>
+    <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <div class="input-group">
+            <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="3" width="12" height="10" rx="1.5"/><path d="M2 5l6 4 6-4"/></svg>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-control{% if errors.get('email') %} is-invalid{% endif %}"
+                placeholder="you@example.com"
+                value="{{ data.get('email', '') }}"
+                autocomplete="email"
+                required
+            >
+        </div>
+        {% if errors.get('email') %}
+        <div class="form-error">{{ errors.get('email') }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div class="input-group">
+            <svg class="input-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-control{% if errors.get('password') %} is-invalid{% endif %}"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                required
+            >
+        </div>
+        {% if errors.get('password') %}
+        <div class="form-error">{{ errors.get('password') }}</div>
+        {% endif %}
+    </div>
+
+    <div class="auth-actions">
+        <label class="form-check">
+            <input type="checkbox" name="remember_me" value="true"> Remember me
+        </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center">
+        Sign in
+    </button>
+</form>
+{% endblock %}
+
+{% block auth_footer %}
+Don't have an account? <a href="{{ url_for('register') }}">Create one</a>
+{% endblock %}

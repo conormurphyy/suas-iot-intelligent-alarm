@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" data-sw="off">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Suas · IoT Intelligent Alarm{% endblock %}</title>
+
+    <link rel="icon" href="{{ url_for('static', path='images/favicon.svg') }}" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/main-v4-DB_ReeJG.css') }}">
+    <script type="module" src="{{ url_for('static', path='js/main-v4-CmWkxJuV.js') }}"></script>
+
+    <meta name="theme-color" content="#1ABB9C" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a2332" media="(prefers-color-scheme: dark)">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var theme=t||(d?'dark':'light');document.documentElement.setAttribute('data-theme',theme);}catch(e){}})();</script>
+</head>
+<body>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <div class="brand-icon">S</div>
+            <div class="brand-name">Suas <small style="font-weight:400;color:var(--text-muted);font-size:13px;margin-left:2px">IoT</small></div>
+        </div>
+
+        {% block auth_header %}{% endblock %}
+
+        {% if success %}
+        <div class="alert alert-success" role="status" style="margin-bottom:16px">
+            <svg class="alert-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M5.5 8.2l1.8 1.8 3.4-3.6"/></svg>
+            <div class="alert-body">{{ success }}</div>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="alert alert-error" role="alert" style="margin-bottom:16px">
+            <svg class="alert-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.8v3.8M8 11.2h.01"/></svg>
+            <div class="alert-body">{{ error }}</div>
+        </div>
+        {% endif %}
+
+        {% block auth_form %}{% endblock %}
+
+        <div class="auth-footer">
+            {% block auth_footer %}{% endblock %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

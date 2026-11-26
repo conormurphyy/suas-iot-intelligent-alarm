@@ -23,7 +23,7 @@ class User(Base):
     def image_path(self) -> str:
         if self.image_file:
             return f"/media/profile_pics/{self.image_file}"
-        return "/static/images/default.jpg"
+        return "/static/images/user.png"
 
 class Alarm(Base):
     __tablename__ = "alarm"

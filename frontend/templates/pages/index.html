@@ -18,11 +18,11 @@
         </div>
         <div class="page-actions">
             <a class="btn btn-outline" href="{{ url_for('schedule') }}">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="12" height="12" rx="2"/><path d="M3 8h12M7 4v2M11 4v2"/></svg>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 2v2M11 2v2"/></svg>
                 View schedule
             </a>
-            <a class="btn btn-primary" href="{{ url_for('schedule') }}">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+            <a class="btn btn-primary" href="{{ url_for('schedule') }}#create-alarm">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg>
                 New alarm
             </a>
         </div>
@@ -38,73 +38,100 @@
 {% if not next_alarm and enabled_alarms | length > 0 %}{% set next_alarm = enabled_alarms | first %}{% endif %}
 
 <!-- Welcome + live clock -->
-<div class="card">
-    <div class="card-body" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center">
-        <div>
-            <div class="page-pretitle">Welcome back</div>
-            <div style="font-size:22px;font-weight:600;color:var(--text)">{{ user.username if user is defined and user.username else 'there' }}</div>
-            <div style="font-size:12.5px;color:var(--text-muted);margin-top:2px">Here's what's happening with your intelligent alarm system today.</div>
-        </div>
-        <div style="text-align:right">
-            <div data-live-date style="font-size:13px;color:var(--text-secondary)"></div>
-            <div data-live-clock style="font-size:28px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums"></div>
+<div class="row">
+    <div class="card">
+        <div class="card-body" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;padding:20px 24px">
+            <div>
+                <div class="page-pretitle">Welcome back</div>
+                <div style="font-size:20px;font-weight:600;color:var(--text);margin-top:2px">{{ user.username if user is defined and user and user.username else 'User' }}</div>
+                <div style="font-size:13px;color:var(--text-muted);margin-top:4px">Manage your wake-up schedule and monitor your smart alarm system.</div>
+            </div>
+            <div style="text-align:right">
+                <div data-live-date style="font-size:12.5px;color:var(--text-secondary);margin-bottom:2px"></div>
+                <div data-live-clock style="font-size:26px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.15"></div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Summary cards -->
+<!-- Summary stat cards -->
 <div class="row col-3">
     <div class="card">
         <div class="stat">
             <div class="stat-icon teal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Total alarms</div>
-                <div class="stat-value">{{ alarm_list | length }}</div>
-                <div class="stat-subtext">Across all schedules</div>
+                <div class="stat-label">Total Alarms</div>
+                <div class="stat-value-row">
+                    <span class="stat-value">{{ alarm_list | length }}</span>
+                </div>
+                <div class="stat-subtext">Configured in your schedule</div>
             </div>
         </div>
     </div>
+
     <div class="card">
         <div class="stat">
             <div class="stat-icon green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 6L9 17l-5-5"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Active alarms</div>
-                <div class="stat-value">{{ enabled_alarms | length }}</div>
-                <div class="stat-subtext">Currently enabled</div>
+                <div class="stat-label">Active Alarms</div>
+                <div class="stat-value-row">
+                    <span class="stat-value">{{ enabled_alarms | length }}</span>
+                </div>
+                <div class="stat-subtext">Armed and ready to trigger</div>
             </div>
         </div>
     </div>
+
     <div class="card">
         <div class="stat">
             <div class="stat-icon blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </div>
             <div class="stat-content">
-                <div class="stat-label">Recent activity</div>
-                <div class="stat-value">{{ reading_list | length }}</div>
-                <div class="stat-subtext">Pressure mat readings</div>
+                <div class="stat-label">Sensor Events</div>
+                <div class="stat-value-row">
+                    <span class="stat-value">{{ reading_list | length }}</span>
+                </div>
+                <div class="stat-subtext">Recorded pressure mat events</div>
             </div>
         </div>
     </div>
 </div>
-<!-- Next alarm + recent readings -->
-<div class="row col-4-8">
+
+<!-- Next alarm + upcoming schedule / recent readings -->
+<div class="row col-4-8" style="align-items:start">
     <div class="card">
-        <div class="card-header"><div class="card-title">Next scheduled alarm</div></div>
-        <div class="card-body" style="text-align:center;padding:28px 16px">
+        <div class="card-header">
+            <div>
+                <div class="card-title">Next scheduled alarm</div>
+                <div class="card-subtitle">Upcoming wake-up trigger</div>
+            </div>
+        </div>
+        <div class="card-body" style="text-align:center;padding:32px 20px">
             {% if next_alarm %}
-                <div style="font-size:40px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums">{{ next_alarm.alarm_time.strftime('%H:%M') if next_alarm.alarm_time and next_alarm.alarm_time.strftime is defined else next_alarm.alarm_time }}</div>
-                <div style="font-size:12.5px;color:var(--text-muted);margin-top:6px">{{ next_alarm.sound_file | default('default_alarm.mp3') }}</div>
-                <div style="margin-top:14px"><span class="status status-green">Enabled</span></div>
+                <div style="font-size:42px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1">
+                    {{ next_alarm.alarm_time.strftime('%H:%M') if next_alarm.alarm_time and next_alarm.alarm_time.strftime is defined else next_alarm.alarm_time }}
+                </div>
+                <div style="font-size:13px;color:var(--text-secondary);margin-top:8px">
+                    {{ next_alarm.alarm_time.strftime('%a, %d %b %Y') if next_alarm.alarm_time and next_alarm.alarm_time.strftime is defined else '' }}
+                </div>
+                <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap">
+                    <span class="status status-green">Enabled</span>
+                    <span class="chip">{{ next_alarm.sound_file | default('default_alarm.mp3') }}</span>
+                </div>
+                <div style="margin-top:20px">
+                    <a class="btn btn-outline btn-sm" href="{{ url_for('schedule') }}">Manage schedule</a>
+                </div>
             {% else %}
-                <div style="font-size:40px;font-weight:600;color:var(--text-muted)">—</div>
-                <div style="font-size:12.5px;color:var(--text-muted);margin-top:6px">No upcoming alarms</div>
-                <div style="margin-top:14px"><span class="status status-red">Disabled</span></div>
-                <div class="empty-state-actions" style="margin-top:16px"><a class="btn btn-primary btn-sm" href="{{ url_for('schedule') }}">Create an alarm</a></div>
+                <div style="font-size:38px;font-weight:600;color:var(--text-muted);line-height:1.1">—</div>
+                <div style="font-size:13px;color:var(--text-muted);margin-top:8px">No upcoming alarms armed</div>
+                <div style="margin-top:18px">
+                    <a class="btn btn-primary btn-sm" href="{{ url_for('schedule') }}#create-alarm">Set an alarm</a>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -112,34 +139,54 @@
     <div class="card">
         <div class="card-header">
             <div>
-                <div class="card-title">Recent pressure mat readings</div>
-                <div class="card-subtitle">Latest activity from your sensor.</div>
+                <div class="card-title">Your scheduled alarms</div>
+                <div class="card-subtitle">Quick view of your configured wake-up times</div>
+            </div>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('schedule') }}">Edit alarms</a>
+        </div>
+        {% if alarm_list %}
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Date</th>
+                            <th>Sound</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alarm in alarm_list[:5] %}
+                        <tr>
+                            <td class="cell-strong" style="font-variant-numeric:tabular-nums">
+                                {{ alarm.alarm_time.strftime('%H:%M') if alarm.alarm_time and alarm.alarm_time.strftime is defined else alarm.alarm_time }}
+                            </td>
+                            <td>{{ alarm.alarm_time.strftime('%a, %d %b') if alarm.alarm_time and alarm.alarm_time.strftime is defined else '—' }}</td>
+                            <td><span class="chip">{{ alarm.sound_file | default('default_alarm.mp3') }}</span></td>
+                            <td>
+                                {% if alarm.enabled %}
+                                    <span class="status status-green">Enabled</span>
+                                {% else %}
+                                    <span class="status status-red">Disabled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        <div class="card-body" style="padding:8px 16px">
-            {% if reading_list %}
-                {% for reading in (reading_list | reverse | list)[:6] %}
-                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-color-light)">
-                    <div style="width:34px;height:34px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--green-lt);color:var(--green)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 6L9 17l-5-5"/></svg>
-                    </div>
-                    <div style="min-width:0">
-                        <div class="cell-strong">{{ reading.event_type | default('Reading') }}</div>
-                        <div style="font-size:12px;color:var(--text-muted)">{% if reading.pressure_detected %}Pressure detected{% else %}No pressure{% endif %}</div>
-                    </div>
-                    <div style="margin-left:auto;font-size:12px;color:var(--text-muted);white-space:nowrap">{{ reading.date_timestamp.strftime('%d %b · %H:%M') if reading.date_timestamp and reading.date_timestamp.strftime is defined else reading.date_timestamp }}</div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state" style="padding:28px 8px">
-                    <div class="empty-state-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    </div>
-                    <div class="empty-state-title">No readings yet</div>
-                    <div class="empty-state-desc">Pressure mat activity will appear here.</div>
-                </div>
-            {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="empty-state-title">No alarms scheduled</div>
+            <div class="empty-state-desc">Add an alarm on the Schedule page to start waking up with Suas.</div>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('schedule') }}#create-alarm">Create your first alarm</a>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
