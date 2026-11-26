@@ -12,8 +12,6 @@
 {% set data = form_data | default({}) %}
 
 <form method="post" action="{{ url_for('register_submit') }}" novalidate>
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
     <div class="form-group">
         <label class="form-label" for="username">Username</label>
         <div class="input-group">
@@ -95,7 +93,6 @@
                 minlength="8"
                 maxlength="72"
                 autocomplete="new-password"
-                data-match="#password"
                 required
             >
         </div>
