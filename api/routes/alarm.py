@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,12 +28,7 @@ def _resolve_user_id(request: Request, body_user_id: int | None) -> int:
 
 # Create Alarm
 @router.post("/", response_model=AlarmResponse, status_code=status.HTTP_201_CREATED)
-def create_alarm(
-    alarm: AlarmCreate,
-    request: Request,
-    db: Annotated[Session, Depends(get_db)],
-):
-    user_id = _resolve_user_id(request, alarm.user_id)
+def create_alarm(alarm: AlarmCreate, request: Request, db: Annotated[Session, Depends(get_db)]):
     new_alarm = models.Alarm(
         user_id=user_id,
         alarm_time=alarm.alarm_time,
@@ -44,7 +39,7 @@ def create_alarm(
     db.commit()
     db.refresh(new_alarm)
 
-    schedule_alarm(new_alarm)
+    schedule_alarm(new_alarm, request.app.state.mqtt_client)
     return new_alarm
 
 
@@ -78,7 +73,7 @@ def get_user_alarms(user_id: int, db: Annotated[Session, Depends(get_db)]):
 
 # Update Alarm Full (PUT)
 @router.put("/{alarm_id}", response_model=AlarmResponse)
-def update_alarm(alarm_id: int, alarm: AlarmBase, db: Annotated[Session, Depends(get_db)]):
+def update_alarm(alarm_id: int, alarm: AlarmBase, request: Request, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     existing_alarm = result.scalars().first()
     if existing_alarm:
@@ -88,14 +83,14 @@ def update_alarm(alarm_id: int, alarm: AlarmBase, db: Annotated[Session, Depends
         db.commit()
         db.refresh(existing_alarm)
 
-        schedule_alarm(existing_alarm)
+        schedule_alarm(existing_alarm, request.app.state.mqtt_client)
         return existing_alarm
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 
 
 # Update Alarm Partial (PATCH)
 @router.patch("/{alarm_id}", response_model=AlarmResponse)
-def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[Session, Depends(get_db)]):
+def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, request: Request, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.Alarm).where(models.Alarm.id == alarm_id))
     existing_alarm = result.scalars().first()
     if existing_alarm:
@@ -108,7 +103,7 @@ def update_alarm_partial(alarm_id: int, alarm: AlarmUpdate, db: Annotated[Sessio
         db.commit()
         db.refresh(existing_alarm)
 
-        schedule_alarm(existing_alarm)
+        schedule_alarm(existing_alarm, request.app.state.mqtt_client)
         return existing_alarm
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Alarm with id {alarm_id} not found")
 

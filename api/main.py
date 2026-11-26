@@ -1,8 +1,5 @@
-from contextlib import asynccontextmanager
-from pathlib import Path
 
-from fastapi import FastAPI, Request, status
-from fastapi.encoders import jsonable_encoder
+from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,15 +11,40 @@ from api.database import Base, engine
 from api.routes.alarm import router as alarm_router
 from api.routes.pages import router as pages_router
 from api.routes.readings import router as readings_router
-from api.routes.users import router as users_router
-from api.services.alarm_scheduler import load_alarms, scheduler
-from api.services.mqtt_client import start_mqtt, stop_mqtt
+from api.routes.alarm import router as alarm_router
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.templating import Jinja2Templates
+from fastapi.encoders import jsonable_encoder
+from contextlib import asynccontextmanager
+from api.services.alarm_scheduler import scheduler, load_alarms
+import paho.mqtt.client as mqtt
+import os
 
 
+MQTT_BROKER = "mosquitto"
+MQTT_PORT = 1883
+
+    
+def on_connect(client, userdata, flags, reason_code, properties):
+    print(f"Connected to EC2 MQTT Broker with result code {reason_code}")
+
+
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+client.username_pw_set(
+    os.getenv("MQTT_USERNAME"),
+    os.getenv("MQTT_PASSWORD")
+)
+client.on_connect = on_connect
+    
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    start_mqtt()
-    load_alarms()
+
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    client.loop_start()
+
+    app.state.mqtt_client = client
+
+    load_alarms(client)
     scheduler.start()
 
     print("Scheduler started")
@@ -33,8 +55,10 @@ async def lifespan(app: FastAPI):
     stop_mqtt()
 
 
-FRONTEND_DIR = Path("frontend") if Path("frontend").exists() else Path("../frontend")
-templates = Jinja2Templates(directory=str(FRONTEND_DIR / "templates"))
+    client.loop_stop()
+    client.disconnect()
+
+templates = Jinja2Templates(directory="../frontend/templates")
 
 Base.metadata.create_all(bind=engine)
 
