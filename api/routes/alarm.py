@@ -2,22 +2,40 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api import models
+from api.auth import verify_access_token
 from api.database import get_db
 from api.schemas import AlarmBase, AlarmCreate, AlarmResponse, AlarmUpdate
-from api.services.alarm_scheduler import schedule_alarm, remove_alarm
+from api.services.alarm_scheduler import remove_alarm, schedule_alarm
+
 router = APIRouter(prefix="/api/alarms", tags=["Alarms"])
+
+
+def _resolve_user_id(request: Request, body_user_id: int | None) -> int:
+    token = request.cookies.get("access_token")
+    if token:
+        sub = verify_access_token(token)
+        if sub is not None:
+            return int(sub)
+    if body_user_id is not None:
+        return body_user_id
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
 
 # Create Alarm
 @router.post("/", response_model=AlarmResponse, status_code=status.HTTP_201_CREATED)
-def create_alarm(alarm: AlarmCreate, db: Annotated[Session, Depends(get_db)]):
+def create_alarm(
+    alarm: AlarmCreate,
+    request: Request,
+    db: Annotated[Session, Depends(get_db)],
+):
+    user_id = _resolve_user_id(request, alarm.user_id)
     new_alarm = models.Alarm(
-        user_id=alarm.user_id,
+        user_id=user_id,
         alarm_time=alarm.alarm_time,
         enabled=alarm.enabled,
         sound_file=alarm.sound_file,
